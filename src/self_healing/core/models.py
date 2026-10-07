@@ -6,7 +6,7 @@ across the entire detection, diagnosis, policy, recovery, and verification loop.
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -31,6 +31,8 @@ class FaultType(str, Enum):
     PROCESS_CRASH = "PROCESS_CRASH"
     ZOMBIE_PROCESS = "ZOMBIE_PROCESS"
     FD_EXHAUSTION = "FD_EXHAUSTION"
+    DISK_GROWTH = "DISK_GROWTH"
+    DEADLOCK = "DEADLOCK"
 
 
 class ActionType(str, Enum):
@@ -214,6 +216,16 @@ class FaultEvent(BaseModel):
     description: str = Field(..., description="Human-readable description of the anomaly")
 
 
+class DetectionEvent(FaultEvent):
+    """Standardized event emitted by deterministic fault detectors with concrete evidence."""
+    model_config = ConfigDict(frozen=True)
+
+    evidence: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Structured telemetry evidence explaining why the detector fired",
+    )
+
+
 class DiagnosisReport(BaseModel):
     """Structured report produced by the root cause diagnosis engine."""
     model_config = ConfigDict(frozen=True)
@@ -224,8 +236,66 @@ class DiagnosisReport(BaseModel):
     fault_type: FaultType = Field(..., description="Fault type analyzed")
     root_cause: str = Field(..., description="Inferred root cause explanation")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Diagnostic confidence score (0.0 - 1.0)")
-    recommended_action: ActionType = Field(..., description="Proposed recovery action from typed registry")
+    recommended_action: Union[ActionType, AllowedActionType, str] = Field(..., description="Proposed recovery action from typed registry")
     telemetry_window: List[MetricSnapshot] = Field(default_factory=list, description="Historical metric context")
+
+
+class DiagnosisResult(BaseModel):
+    """Deterministic, explainable diagnosis outcome based on forensic evidence."""
+    model_config = ConfigDict(frozen=True)
+
+    diagnosis_id: str = Field(..., description="Unique diagnosis identifier (UUID)")
+    event_id: str = Field(..., description="Associated detection event ID")
+    fault_type: FaultType = Field(..., description="Categorized fault type")
+    target_id: str = Field(..., description="Affected demo target ID")
+    evidence: Dict[str, Any] = Field(default_factory=dict, description="Recorded evidence from detection event and system metrics")
+    probable_cause: str = Field(..., description="Deterministic, explainable root cause explanation")
+    severity: FaultSeverity = Field(..., description="Severity level of the diagnosed fault")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Deterministic confidence score (0.0 to 1.0)")
+    recommended_action: Union[ActionType, AllowedActionType, str] = Field(..., description="Recommended typed recovery action from allowlisted registry")
+    traceability_log: List[str] = Field(default_factory=list, description="Step-by-step reasoning trail explaining how conclusion was derived")
+    root_cause: Optional[str] = Field(default=None, description="Alias for probable_cause for backward compatibility")
+    telemetry_window: List[MetricSnapshot] = Field(default_factory=list, description="Historical metric context")
+
+
+class RiskLevel(str, Enum):
+    """Risk rating for recovery interventions."""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class AllowedActionType(str, Enum):
+    """Explicit allowlist of permitted recovery actions."""
+    RESTART_DEMO_SERVICE = "restart_demo_service"
+    TERMINATE_DEMO_PROCESS = "terminate_demo_process"
+    LOWER_DEMO_PROCESS_PRIORITY = "lower_demo_process_priority"
+    CLEANUP_DEMO_LOGS = "cleanup_demo_logs"
+    RESTART_DEMO_APPLICATION = "restart_demo_application"
+
+
+class GuardrailStatus(str, Enum):
+    """Explicit guardrail evaluation decision status."""
+    APPROVED = "GUARDRAIL APPROVED"
+    REJECTED = "GUARDRAIL REJECTED"
+
+
+class RecoveryAction(BaseModel):
+    """Typed specification for a proposed recovery remediation."""
+    model_config = ConfigDict(frozen=True)
+
+    action_id: str = Field(..., description="Unique action identifier (UUID)")
+    action_type: AllowedActionType = Field(..., description="Allowlisted action type")
+    target: str = Field(..., min_length=1, description="Target identifier (e.g. 'demo-cpu')")
+    reason: str = Field(..., min_length=1, description="Diagnostic reason justifying this action")
+    required_evidence: List[str] = Field(default_factory=list, description="List of required evidence keys that must be present")
+    risk_level: RiskLevel = Field(default=RiskLevel.MEDIUM, description="Action operational risk rating")
+    max_retries: int = Field(default=3, ge=1, description="Maximum permitted execution retry attempts")
+    retry_count: int = Field(default=0, ge=0, description="Current retry attempt count")
+    allowed_targets: List[str] = Field(default_factory=list, description="Approved target IDs permitted for this specific action")
+    preconditions: List[str] = Field(default_factory=list, description="Prerequisite conditions required before execution")
+    parameters: Dict[str, Any] = Field(default_factory=dict, description="Typed parameters for the recovery executor")
 
 
 class PolicyDecision(BaseModel):
@@ -233,14 +303,25 @@ class PolicyDecision(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     decision_id: str = Field(..., description="Unique policy decision ID (UUID)")
-    diagnosis_id: str = Field(..., description="Associated diagnosis report ID")
+    diagnosis_id: Optional[str] = Field(default=None, description="Associated diagnosis report ID")
     target_id: str = Field(..., description="Evaluated target ID")
-    action_type: ActionType = Field(..., description="Evaluated action type")
+    action_type: Union[ActionType, AllowedActionType] = Field(..., description="Evaluated action type")
     action_params: Dict[str, Any] = Field(default_factory=dict, description="Validated typed action parameters")
     allowed: bool = Field(..., description="Whether action is permitted to proceed")
     is_dry_run: bool = Field(default=False, description="Whether action will run in dry-run mode (simulation only)")
     rejection_reason: Optional[str] = Field(default=None, description="Explanation if action was rejected by guardrail")
     decided_at: datetime = Field(default_factory=utc_now, description="Timestamp of policy evaluation")
+
+
+class GuardrailDecision(PolicyDecision):
+    """Comprehensive policy gatekeeper decision outcome."""
+    model_config = ConfigDict(frozen=True)
+
+    status: GuardrailStatus = Field(..., description="Explicit decision status: GUARDRAIL APPROVED or GUARDRAIL REJECTED")
+    action_id: str = Field(..., description="Associated RecoveryAction ID")
+    violations: List[str] = Field(default_factory=list, description="List of security or policy violations detected")
+    reasons: List[str] = Field(default_factory=list, description="Detailed explanatory reasons for decision")
+    validation_details: Dict[str, bool] = Field(default_factory=dict, description="Detailed check breakdown across all 8 guardrail criteria")
 
 
 class RecoveryResult(BaseModel):
@@ -249,13 +330,14 @@ class RecoveryResult(BaseModel):
 
     action_id: str = Field(..., description="Unique recovery action identifier (UUID)")
     target_id: str = Field(..., description="Remediated target ID")
-    action_type: ActionType = Field(..., description="Executed action type")
+    action_type: Union[ActionType, AllowedActionType, str] = Field(..., description="Executed action type")
     executed_at: datetime = Field(default_factory=utc_now, description="Timestamp of execution")
     success: bool = Field(..., description="Whether the recovery action completed without error")
     dry_run: bool = Field(default=False, description="True if action was simulated without altering OS state")
     execution_latency_ms: float = Field(..., ge=0.0, description="Execution duration in milliseconds")
     output_message: str = Field(..., description="Execution summary or details")
     error: Optional[str] = Field(default=None, description="Error message if execution failed")
+    details: Dict[str, Any] = Field(default_factory=dict, description="Detailed execution telemetry or metadata")
 
 
 class VerificationResult(BaseModel):
@@ -280,7 +362,20 @@ class IncidentRecord(BaseModel):
     completed_at: Optional[datetime] = Field(default=None, description="Incident completion timestamp")
     status: IncidentStatus = Field(default=IncidentStatus.DETECTED, description="Current incident lifecycle status")
     fault_event: FaultEvent = Field(..., description="Initial triggering fault event")
-    diagnosis: Optional[DiagnosisReport] = Field(default=None, description="Diagnostic report")
+    diagnosis: Optional[Union[DiagnosisResult, DiagnosisReport]] = Field(default=None, description="Diagnostic report or result")
     policy_decision: Optional[PolicyDecision] = Field(default=None, description="Guardrail evaluation decision")
     recovery_result: Optional[RecoveryResult] = Field(default=None, description="Recovery execution record")
     verification_result: Optional[VerificationResult] = Field(default=None, description="Post-healing verification")
+
+
+class FaultStatus(BaseModel):
+    """Standardized runtime status of a fault injection demo."""
+    model_config = ConfigDict(frozen=True)
+
+    fault_name: str = Field(..., description="Name of the fault (e.g. 'cpu', 'memory')")
+    target_id: str = Field(..., description="Target identifier (e.g. 'demo-cpu')")
+    is_running: bool = Field(..., description="Whether demo fault workload process is actively running")
+    pid: Optional[int] = Field(default=None, description="Operating system PID of demo target process")
+    metrics: Dict[str, Any] = Field(default_factory=dict, description="Live telemetry metrics for the target")
+    details: str = Field(default="", description="Human-readable status summary or explanation")
+

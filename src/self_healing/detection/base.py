@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from self_healing.core.models import (
+    DetectionEvent,
     FaultEvent,
     FaultSeverity,
     FaultType,

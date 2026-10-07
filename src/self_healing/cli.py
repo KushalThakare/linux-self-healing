@@ -305,6 +305,232 @@ def monitor_cmd(
     click.echo("================================================================================")
 
 
+def _render_fault_status(status: Any, action_label: str, json_output: bool) -> None:
+    """Format and display a FaultStatus response."""
+    if json_output:
+        import json
+        click.echo(status.model_dump_json(indent=2))
+        return
+
+    status_color = "green" if status.is_running else "yellow"
+    state_str = "RUNNING" if status.is_running else "STOPPED"
+    if status.metrics.get("crashed"):
+        status_color = "red"
+        state_str = "CRASHED"
+
+    click.echo("--------------------------------------------------------------------------------")
+    click.secho(f"[{action_label.upper()}] Fault: {status.fault_name.upper()} | Target: {status.target_id}", fg="cyan", bold=True)
+    click.secho(f"  State    : {state_str}", fg=status_color, bold=True)
+    click.echo(f"  PID      : {status.pid or 'None'}")
+    if status.metrics:
+        click.echo("  Metrics  :")
+        for k, v in status.metrics.items():
+            click.echo(f"    - {k}: {v}")
+    click.echo(f"  Details  : {status.details}")
+    click.echo("--------------------------------------------------------------------------------")
+
+
+@cli.group("fault")
+def fault_group() -> None:
+    """Controlled fault-injection subsystem for isolated research demo targets."""
+    pass
+
+
+@fault_group.command("cpu")
+@click.argument("action", type=click.Choice(["start", "stop", "status", "cleanup"], case_sensitive=False), default="status")
+@click.option("--json", "json_output", is_flag=True, help="Output status as JSON.")
+def fault_cpu_cmd(action: str, json_output: bool) -> None:
+    """Manage isolated CPU runaway fault demo (start, stop, status, cleanup)."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    action = action.lower()
+    if action == "start":
+        res = mgr.start_fault("cpu")
+        _render_fault_status(res, "START", json_output)
+    elif action == "stop":
+        res = mgr.stop_fault("cpu")
+        _render_fault_status(res, "STOP", json_output)
+    elif action == "cleanup":
+        ok = mgr.cleanup_fault("cpu")
+        if json_output:
+            import json
+            click.echo(json.dumps({"fault": "cpu", "cleanup": ok}))
+        else:
+            click.secho(f"CPU runaway demo target cleaned up successfully: {ok}", fg="green")
+    else:
+        res = mgr.status_fault("cpu")
+        _render_fault_status(res, "STATUS", json_output)
+
+
+@fault_group.command("memory")
+@click.argument("action", type=click.Choice(["start", "stop", "status", "cleanup"], case_sensitive=False), default="status")
+@click.option("--max-mb", type=int, default=256, help="Maximum memory ceiling in MB (hard safety cap: 512MB).")
+@click.option("--chunk-mb", type=int, default=20, help="Allocation chunk size in MB.")
+@click.option("--json", "json_output", is_flag=True, help="Output status as JSON.")
+def fault_memory_cmd(action: str, max_mb: int, chunk_mb: int, json_output: bool) -> None:
+    """Manage isolated memory growth fault demo (start, stop, status, cleanup)."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    action = action.lower()
+    if action == "start":
+        res = mgr.start_fault("memory", max_mb=max_mb, chunk_mb=chunk_mb)
+        _render_fault_status(res, "START", json_output)
+    elif action == "stop":
+        res = mgr.stop_fault("memory")
+        _render_fault_status(res, "STOP", json_output)
+    elif action == "cleanup":
+        ok = mgr.cleanup_fault("memory")
+        if json_output:
+            import json
+            click.echo(json.dumps({"fault": "memory", "cleanup": ok}))
+        else:
+            click.secho(f"Memory growth demo target cleaned up successfully: {ok}", fg="green")
+    else:
+        res = mgr.status_fault("memory")
+        _render_fault_status(res, "STATUS", json_output)
+
+
+@fault_group.command("service")
+@click.argument("action", type=click.Choice(["start", "stop", "status", "cleanup"], case_sensitive=False), default="status")
+@click.option("--auto-crash/--no-auto-crash", default=True, help="Immediately trigger service crash after startup.")
+@click.option("--json", "json_output", is_flag=True, help="Output status as JSON.")
+def fault_service_cmd(action: str, auto_crash: bool, json_output: bool) -> None:
+    """Manage isolated service crash fault demo (start, stop, status, cleanup)."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    action = action.lower()
+    if action == "start":
+        res = mgr.start_fault("service", auto_crash=auto_crash)
+        _render_fault_status(res, "START", json_output)
+    elif action == "stop":
+        res = mgr.stop_fault("service")
+        _render_fault_status(res, "STOP", json_output)
+    elif action == "cleanup":
+        ok = mgr.cleanup_fault("service")
+        if json_output:
+            import json
+            click.echo(json.dumps({"fault": "service", "cleanup": ok}))
+        else:
+            click.secho(f"Service crash demo target cleaned up successfully: {ok}", fg="green")
+    else:
+        res = mgr.status_fault("service")
+        _render_fault_status(res, "STATUS", json_output)
+
+
+@fault_group.command("disk")
+@click.argument("action", type=click.Choice(["start", "stop", "status", "cleanup"], case_sensitive=False), default="status")
+@click.option("--max-mb", type=int, default=50, help="Maximum disk write cap in MB (hard safety cap: 100MB).")
+@click.option("--json", "json_output", is_flag=True, help="Output status as JSON.")
+def fault_disk_cmd(action: str, max_mb: int, json_output: bool) -> None:
+    """Manage isolated disk/log growth fault demo (start, stop, status, cleanup)."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    action = action.lower()
+    if action == "start":
+        res = mgr.start_fault("disk", max_mb=max_mb)
+        _render_fault_status(res, "START", json_output)
+    elif action == "stop":
+        res = mgr.stop_fault("disk")
+        _render_fault_status(res, "STOP", json_output)
+    elif action == "cleanup":
+        ok = mgr.cleanup_fault("disk")
+        if json_output:
+            import json
+            click.echo(json.dumps({"fault": "disk", "cleanup": ok}))
+        else:
+            click.secho(f"Disk growth demo target cleaned up successfully: {ok}", fg="green")
+    else:
+        res = mgr.status_fault("disk")
+        _render_fault_status(res, "STATUS", json_output)
+
+
+@fault_group.command("deadlock")
+@click.argument("action", type=click.Choice(["start", "stop", "status", "cleanup"], case_sensitive=False), default="status")
+@click.option("--json", "json_output", is_flag=True, help="Output status as JSON.")
+def fault_deadlock_cmd(action: str, json_output: bool) -> None:
+    """Manage isolated deadlock fault demo (start, stop, status, cleanup)."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    action = action.lower()
+    if action == "start":
+        res = mgr.start_fault("deadlock")
+        _render_fault_status(res, "START", json_output)
+    elif action == "stop":
+        res = mgr.stop_fault("deadlock")
+        _render_fault_status(res, "STOP", json_output)
+    elif action == "cleanup":
+        ok = mgr.cleanup_fault("deadlock")
+        if json_output:
+            import json
+            click.echo(json.dumps({"fault": "deadlock", "cleanup": ok}))
+        else:
+            click.secho(f"Deadlock demo target cleaned up successfully: {ok}", fg="green")
+    else:
+        res = mgr.status_fault("deadlock")
+        _render_fault_status(res, "STATUS", json_output)
+
+
+@fault_group.command("status")
+@click.option("--json", "json_output", is_flag=True, help="Output all fault statuses as JSON.")
+def fault_status_all_cmd(json_output: bool) -> None:
+    """Display overall status across all demo fault injectors."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    statuses = mgr.status_all()
+
+    if json_output:
+        import json
+        click.echo(json.dumps([s.model_dump() for s in statuses], indent=2))
+        return
+
+    click.echo("================================================================================")
+    click.secho("  DEMO FAULT INJECTION SUBSYSTEM STATUS", fg="cyan", bold=True)
+    click.echo("================================================================================")
+    header = f"  {'FAULT':10s}  {'TARGET':15s}  {'STATE':10s}  {'PID':>7s}  {'DETAILS':30s}"
+    click.echo(header)
+    click.echo("  " + "-" * 76)
+    for s in statuses:
+        color = "green" if s.is_running else "yellow"
+        state_label = "RUNNING" if s.is_running else "STOPPED"
+        if s.metrics.get("crashed"):
+            color = "red"
+            state_label = "CRASHED"
+        click.secho(f"  {s.fault_name:10s}  {s.target_id:15s}  {state_label:10s}  ", fg=color, nl=False)
+        pid_str = str(s.pid) if s.pid else "-"
+        click.echo(f"{pid_str:>7s}  {s.details[:30]:30s}")
+    click.echo("================================================================================")
+
+
+@fault_group.command("cleanup")
+@click.option("--json", "json_output", is_flag=True, help="Output cleanup results as JSON.")
+def fault_cleanup_all_cmd(json_output: bool) -> None:
+    """Clean up and reset all demo fault targets and artifacts."""
+    from self_healing.fault_injection.manager import FaultManager
+
+    mgr = FaultManager()
+    results = mgr.cleanup_all()
+
+    if json_output:
+        import json
+        click.echo(json.dumps(results, indent=2))
+        return
+
+    click.echo("================================================================================")
+    click.secho("  DEMO FAULT CLEANUP REPORT", fg="cyan", bold=True)
+    click.echo("================================================================================")
+    for name, ok in results.items():
+        color = "green" if ok else "red"
+        status_str = "CLEANED" if ok else "FAILED"
+        click.secho(f"  [{status_str:7s}] Demo target for fault '{name}'", fg=color)
+    click.echo("================================================================================")
+
+
 def main() -> None:
     """Application CLI entry point."""
     cli()

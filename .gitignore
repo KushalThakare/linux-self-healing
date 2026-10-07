@@ -51,3 +51,5 @@ htmlcov/
 # Logs & temp
 *.log
 scratch/
+.fault_state/
+demo_scratch/

@@ -7,7 +7,7 @@ across the entire detection, diagnosis, policy, recovery, and verification loop.
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 def utc_now() -> datetime:
@@ -339,6 +339,20 @@ class RecoveryResult(BaseModel):
     error: Optional[str] = Field(default=None, description="Error message if execution failed")
     details: Dict[str, Any] = Field(default_factory=dict, description="Detailed execution telemetry or metadata")
 
+    def mark_unsuccessful(self, reason: str) -> "RecoveryResult":
+        """Return a copy of this result marked as unsuccessful due to verification failure."""
+        new_details = dict(self.details)
+        new_details["verification_failed"] = True
+        new_details["failure_reason"] = reason
+        return self.model_copy(
+            update={
+                "success": False,
+                "error": reason if self.error is None else f"{self.error}; {reason}",
+                "output_message": f"{self.output_message} (Verification failed: {reason})",
+                "details": new_details,
+            }
+        )
+
 
 class VerificationResult(BaseModel):
     """Outcome of closed-loop verification probes following remediation."""
@@ -347,11 +361,44 @@ class VerificationResult(BaseModel):
     verification_id: str = Field(..., description="Unique verification identifier (UUID)")
     incident_id: str = Field(..., description="Associated incident ID")
     target_id: str = Field(..., description="Target verified")
-    status: VerificationStatus = Field(..., description="Overall verification outcome")
+    status: VerificationStatus = Field(default=VerificationStatus.HEALTHY, description="Overall verification outcome")
+    verified: bool = Field(default=True, description="True if verification succeeded and fault resolved")
+    failed: bool = Field(default=False, description="True if verification failed and fault persists")
+    evidence: Dict[str, Any] = Field(default_factory=dict, description="Structured measurable telemetry evidence of verification")
+    verification_duration: float = Field(default=0.0, ge=0.0, description="Verification execution duration in seconds")
+    metrics_before: Dict[str, Any] = Field(default_factory=dict, description="Metrics captured before recovery action")
+    metrics_after: Dict[str, Any] = Field(default_factory=dict, description="Metrics captured after recovery action")
     verified_at: datetime = Field(default_factory=utc_now, description="Timestamp of verification")
     checks_passed: List[str] = Field(default_factory=list, description="List of successful health check names")
     checks_failed: List[str] = Field(default_factory=list, description="List of failed health check names")
     details: str = Field(default="", description="Detailed probe diagnostic summary")
+    retry_recommended: bool = Field(default=False, description="Whether retry policy permits another attempt")
+    retry_count: int = Field(default=0, ge=0, description="Current retry attempt index")
+
+    @model_validator(mode="before")
+    @classmethod
+    def sync_verified_failed(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            status = data.get("status")
+            if "verified" not in data and "failed" not in data:
+                if status is not None:
+                    is_healthy = (status == VerificationStatus.HEALTHY or status == "HEALTHY")
+                    data["verified"] = is_healthy
+                    data["failed"] = not is_healthy
+                else:
+                    data["verified"] = True
+                    data["failed"] = False
+            elif "verified" in data and "failed" not in data:
+                data["failed"] = not bool(data["verified"])
+                if "status" not in data:
+                    data["status"] = VerificationStatus.HEALTHY if data["verified"] else VerificationStatus.FAILED
+            elif "failed" in data and "verified" not in data:
+                data["verified"] = not bool(data["failed"])
+                if "status" not in data:
+                    data["status"] = VerificationStatus.FAILED if data["failed"] else VerificationStatus.HEALTHY
+            elif "verified" in data and "status" not in data:
+                data["status"] = VerificationStatus.HEALTHY if data["verified"] else VerificationStatus.FAILED
+        return data
 
 
 class IncidentRecord(BaseModel):

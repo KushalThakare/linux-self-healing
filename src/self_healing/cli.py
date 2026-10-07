@@ -531,6 +531,51 @@ def fault_cleanup_all_cmd(json_output: bool) -> None:
     click.echo("================================================================================")
 
 
+@cli.command("verify")
+@click.argument("target_id")
+@click.option("--json", "json_output", is_flag=True, help="Output verification result as JSON.")
+def verify_cmd(target_id: str, json_output: bool) -> None:
+    """Run measurable post-recovery verification probes on an approved demo target."""
+    from self_healing.config.settings import load_config
+    from self_healing.targets.registry import TargetRegistry
+    from self_healing.verification.engine import VerificationEngine
+
+    cfg = load_config()
+    registry = TargetRegistry(cfg.targets)
+    try:
+        target = registry.get(target_id)
+    except Exception as ex:
+        click.secho(f"Target lookup error: {ex}", fg="red")
+        sys.exit(1)
+
+    engine = VerificationEngine()
+    result = engine.verify(target=target, incident_id="cli-manual-verify")
+
+    if json_output:
+        import json
+        click.echo(json.dumps(result.model_dump(mode="json"), indent=2))
+        return
+
+    click.echo("================================================================================")
+    status_color = "green" if result.verified else "red"
+    click.secho(f"  POST-RECOVERY VERIFICATION: {result.status.value}", fg=status_color, bold=True)
+    click.echo("================================================================================")
+    click.echo(f"  Target ID:       {result.target_id}")
+    click.echo(f"  Verified:        {result.verified}")
+    click.echo(f"  Failed:          {result.failed}")
+    click.echo(f"  Duration:        {result.verification_duration:.4f}s")
+    click.echo(f"  Passed Checks:   {', '.join(result.checks_passed) if result.checks_passed else 'None'}")
+    click.echo(f"  Failed Checks:   {', '.join(result.checks_failed) if result.checks_failed else 'None'}")
+    click.echo(f"  Details:         {result.details}")
+    if result.evidence:
+        click.echo("  Evidence:")
+        for k, v in result.evidence.items():
+            click.echo(f"    - {k}: {v}")
+    click.echo("================================================================================")
+    if not result.verified:
+        sys.exit(1)
+
+
 def main() -> None:
     """Application CLI entry point."""
     cli()

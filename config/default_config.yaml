@@ -1,0 +1,29 @@
+# Autonomous Fault Detection and Self-Healing System for Linux
+# Default System Configuration
+
+system:
+  mode: "development"
+  dry_run: true
+  log_level: "INFO"
+  workspace_root: "/home/arskage/linux-self-healing"
+
+monitoring:
+  sample_interval_seconds: 1.0
+  ring_buffer_size: 60
+  cpu_percent_threshold: 90.0
+  memory_rss_mb_threshold: 250.0
+
+guardrails:
+  max_actions_per_window: 3
+  flapping_window_seconds: 900.0
+  default_cooldown_seconds: 30.0
+  enforce_target_allowlist: true
+
+storage:
+  db_path: "data/incidents.db"
+  audit_log_path: "logs/incidents.jsonl"
+
+api:
+  host: "127.0.0.1"
+  port: 8000
+  reload: false

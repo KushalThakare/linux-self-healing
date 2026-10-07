@@ -1,0 +1,23 @@
+# Allowlisted Demo Targets Specification
+# Hard safety boundary: Only targets declared here may be inspected or modified.
+
+targets:
+  - target_id: "demo-web"
+    process_name: "python3"
+    cmdline_substring: "demo_web_service.py"
+    expected_port: 8080
+    working_dir_prefix: "/home/arskage/linux-self-healing"
+    max_restarts_per_window: 3
+    cooldown_seconds: 30.0
+    health_check_url: "http://127.0.0.1:8080/health"
+    enabled: true
+
+  - target_id: "demo-worker"
+    process_name: "python3"
+    cmdline_substring: "demo_worker_service.py"
+    expected_port: null
+    working_dir_prefix: "/home/arskage/linux-self-healing"
+    max_restarts_per_window: 3
+    cooldown_seconds: 30.0
+    health_check_url: null
+    enabled: true

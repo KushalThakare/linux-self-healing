@@ -77,10 +77,19 @@ pytest
 
 ---
 
-## Documentation
+## Documentation & Roadmap
 
+- [Features, Status & Visualization Roadmap](FEATURES_AND_ROADMAP.md)
 - [System Architecture](docs/architecture.md)
-- [Environment Specification](docs/environment.md)
-- [Monitoring Metrics & Source Catalog](docs/monitoring_metrics.md)
-- [Project Implementation Plan](PROJECT_PLAN.md)
+- [FastAPI Backend & API Endpoints](docs/api_backend.md)
+- [Autonomous Orchestrator](docs/orchestrator.md)
+- [Incident Management & Persistence](docs/incident_management.md)
+- [Post-Recovery Verification](docs/verification_subsystem.md)
+- [Recovery Action Registry](docs/recovery_executor.md)
+- [Safety Guardrails](docs/guardrails.md)
+- [Deterministic Diagnosis Engine](docs/diagnosis_engine.md)
+- [Detection Rules Catalog](docs/detection_rules.md)
+- [Monitoring Metrics Catalog](docs/monitoring_metrics.md)
+- [Fault Injection Framework](docs/fault_injection.md)
 - [Safety Rules & Operating Guidelines](AGENTS.md)
+

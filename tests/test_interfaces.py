@@ -170,18 +170,20 @@ def test_verification_engine_contract(sample_target: TargetSpec):
 def test_incident_store_contract(sample_target: TargetSpec, sample_fault_event: FaultEvent):
     """Verify incident store saves and retrieves IncidentRecord."""
     from self_healing.core.models import IncidentRecord, IncidentStatus
-    store = InMemoryIncidentStore()
-    record = IncidentRecord(
-        incident_id="inc-999",
-        target_id=sample_target.target_id,
-        status=IncidentStatus.DETECTED,
-        fault_event=sample_fault_event,
-    )
-    store.save(record)
-    retrieved = store.get("inc-999")
-    assert retrieved is not None
-    assert retrieved.incident_id == "inc-999"
-    assert len(store.list_incidents()) == 1
+    from self_healing.incidents import IncidentRepository, InMemoryIncidentStore
+
+    for store in [InMemoryIncidentStore(), IncidentRepository(db_path=":memory:")]:
+        record = IncidentRecord(
+            incident_id="inc-999",
+            target_id=sample_target.target_id,
+            status=IncidentStatus.DETECTED,
+            fault_event=sample_fault_event,
+        )
+        store.save(record)
+        retrieved = store.get("inc-999")
+        assert retrieved is not None
+        assert retrieved.incident_id == "inc-999"
+        assert len(store.list_incidents()) == 1
 
 
 def test_fault_injector_safety(sample_target: TargetSpec):

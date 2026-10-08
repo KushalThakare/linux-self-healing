@@ -27,8 +27,10 @@ class BaseIncidentStore(ABC):
         self,
         limit: int = 50,
         target_id: Optional[str] = None,
+        fault_type: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> List[IncidentRecord]:
-        """List recent incident records with optional target filtering."""
+        """List recent incident records with optional target, fault type, and status filtering."""
         pass
 
 
@@ -54,9 +56,23 @@ class InMemoryIncidentStore(BaseIncidentStore):
         self,
         limit: int = 50,
         target_id: Optional[str] = None,
+        fault_type: Optional[str] = None,
+        status: Optional[str] = None,
     ) -> List[IncidentRecord]:
         results = list(self._records.values())
         if target_id:
             results = [r for r in results if r.target_id == target_id]
+        if fault_type:
+            ft_str = fault_type.value if hasattr(fault_type, "value") else str(fault_type)
+            results = [
+                r for r in results
+                if r.fault_event and (r.fault_event.fault_type.value == ft_str or str(r.fault_event.fault_type) == ft_str)
+            ]
+        if status:
+            st_str = status.value if hasattr(status, "value") else str(status)
+            results = [
+                r for r in results
+                if r.status.value == st_str or str(r.status) == st_str
+            ]
         results.sort(key=lambda r: r.started_at, reverse=True)
         return results[:limit]

@@ -50,6 +50,8 @@ htmlcov/
 
 # Logs & temp
 *.log
+*.db
+data/*.db
 scratch/
 .fault_state/
 demo_scratch/

@@ -41,6 +41,16 @@ class ServiceFailureDetector(BaseFaultRule):
         target: TargetSpec,
         window: List[MetricSnapshot],
     ) -> Optional[DetectionEvent]:
+        # Service detector only evaluates services (targets with expected_port or service/web/daemon in target_id)
+        is_service = (
+            target.expected_port is not None
+            or "service" in target.target_id
+            or "web" in target.target_id
+            or "daemon" in target.target_id
+        )
+        if not is_service:
+            return None
+
         if not window or len(window) < self.min_failed_samples:
             return None
 

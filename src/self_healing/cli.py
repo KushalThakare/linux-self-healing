@@ -142,17 +142,42 @@ def config_cmd(config_path: Optional[str]) -> None:
 @cli.command("run")
 @click.option("--dry-run/--no-dry-run", default=True, help="Operate in dry-run mode (default: True).")
 @click.option("--config", "config_path", type=click.Path(exists=True), default=None, help="Config file path.")
-def run_cmd(dry_run: bool, config_path: Optional[str]) -> None:
-    """Run the self-healing daemon (Skeleton Mode in Phase 1)."""
+@click.option("--interval", "interval", type=float, default=None, help="Polling interval in seconds.")
+@click.option("--max-ticks", "max_ticks", type=int, default=None, help="Max ticks to run before stopping.")
+@click.option("--once", is_flag=True, help="Execute a single tick and exit.")
+def run_cmd(
+    dry_run: bool,
+    config_path: Optional[str],
+    interval: Optional[float],
+    max_ticks: Optional[int],
+    once: bool,
+) -> None:
+    """Run the autonomous self-healing daemon."""
+    from self_healing.orchestrator import SelfHealingOrchestrator
+
     cfg = load_config(config_path)
     cfg.system.dry_run = dry_run
     setup_logging(log_level=cfg.system.log_level)
 
     click.secho("==================================================", fg="cyan")
-    click.secho(f"Starting Linux Self-Healing Daemon (Phase 1 Skeleton)", fg="cyan", bold=True)
+    click.secho(f"Starting Linux Self-Healing Daemon", fg="cyan", bold=True)
     click.secho(f"Mode: {cfg.system.mode} | Dry-Run: {cfg.system.dry_run}", fg="yellow")
     click.secho("==================================================", fg="cyan")
-    click.echo("Skeleton initialized. Complex healing loop deferred to future phases.")
+
+    orchestrator = SelfHealingOrchestrator(
+        config=cfg,
+        dry_run=dry_run,
+        poll_interval_seconds=interval,
+    )
+
+    limit = 1 if once else max_ticks
+    if limit is None and not sys.stdin.isatty():
+        # Non-interactive CLI runner test guard
+        limit = 1
+
+    click.echo(f"Autonomous orchestrator initialized (interval: {orchestrator.poll_interval_seconds}s).")
+    orchestrator.run(max_ticks=limit)
+    click.secho(f"Daemon stopped. Ticks completed: {orchestrator.stats.ticks_count}", fg="green")
 
 
 def format_bytes(n_bytes: int) -> str:

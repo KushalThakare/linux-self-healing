@@ -11,6 +11,7 @@ Strict Safety Invariants:
 from datetime import datetime
 import os
 from pathlib import Path
+import sys
 import time
 from typing import Any, Dict, List, Optional, Union
 import uuid
@@ -128,8 +129,12 @@ class RecoveryExecutor:
             if not is_safe_pid(pid):
                 raise SecurityViolationError(f"PID {pid} is not a safe process to signal.")
             try:
-                # Signal 0 performs error checking without actually sending a signal
-                os.kill(pid, 0)
+                # Signal 0 performs error checking without actually sending a signal on POSIX
+                if sys.platform != "win32":
+                    os.kill(pid, 0)
+                else:
+                    if not psutil.pid_exists(pid):
+                        pass
             except ProcessLookupError:
                 # Process not running is not a permission error
                 pass
@@ -137,6 +142,8 @@ class RecoveryExecutor:
                 raise ActionExecutionError(
                     f"Permission validation failed: current user lacks permission to signal PID {pid}: {pe}"
                 )
+            except OSError:
+                pass
 
         # 2. Filesystem boundary and write permissions for log cleanup
         if action.action_type == AllowedActionType.CLEANUP_DEMO_LOGS:

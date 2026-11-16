@@ -7,6 +7,8 @@ from self_healing.core.exceptions import (
 )
 from self_healing.core.models import (
     ActionType,
+    DiagnosisReport,
+    FaultEvent,
     FaultSeverity,
     FaultType,
     MetricSnapshot,

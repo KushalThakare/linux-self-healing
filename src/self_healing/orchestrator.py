@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
 import uuid
 from pydantic import BaseModel, Field
 
+from self_healing.anomaly.detector import IsolationForestDetector
 from self_healing.config.settings import AppConfig, load_config
 from self_healing.core.models import (
     AllowedActionType,
@@ -92,9 +93,12 @@ class SelfHealingOrchestrator:
         dry_run: Optional[bool] = None,
         poll_interval_seconds: Optional[float] = None,
         config_path: Optional[str] = None,
+        enable_anomaly_detection: bool = True,
     ) -> None:
         self.config = config or load_config(config_path)
         self.target_registry = target_registry or TargetRegistry(self.config.targets)
+        self.enable_anomaly_detection = enable_anomaly_detection
+        self.anomaly_detector: Optional[IsolationForestDetector] = None
 
         # Dry-run flag: explicit argument takes precedence, then config
         if dry_run is not None:
@@ -193,6 +197,10 @@ class SelfHealingOrchestrator:
         self.detection_engine.register_rule(ServiceFailureDetector())
         self.detection_engine.register_rule(DiskExhaustionDetector())
         self.detection_engine.register_rule(DeadlockDetector())
+
+        if self.enable_anomaly_detection:
+            self.anomaly_detector = IsolationForestDetector(threshold=0.65)
+            self.detection_engine.register_rule(self.anomaly_detector)
 
     # -------------------------------------------------------------------------
     # Event Listeners

@@ -33,6 +33,7 @@ class FaultType(str, Enum):
     FD_EXHAUSTION = "FD_EXHAUSTION"
     DISK_GROWTH = "DISK_GROWTH"
     DEADLOCK = "DEADLOCK"
+    STATISTICAL_ANOMALY = "STATISTICAL_ANOMALY"
 
 
 class ActionType(str, Enum):
@@ -226,6 +227,23 @@ class DetectionEvent(FaultEvent):
     )
 
 
+class RiskLevel(str, Enum):
+    """Risk rating for recovery interventions."""
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class AllowedActionType(str, Enum):
+    """Explicit allowlist of permitted recovery actions."""
+    RESTART_DEMO_SERVICE = "restart_demo_service"
+    TERMINATE_DEMO_PROCESS = "terminate_demo_process"
+    LOWER_DEMO_PROCESS_PRIORITY = "lower_demo_process_priority"
+    CLEANUP_DEMO_LOGS = "cleanup_demo_logs"
+    RESTART_DEMO_APPLICATION = "restart_demo_application"
+
+
 class DiagnosisReport(BaseModel):
     """Structured report produced by the root cause diagnosis engine."""
     model_config = ConfigDict(frozen=True)
@@ -256,23 +274,6 @@ class DiagnosisResult(BaseModel):
     traceability_log: List[str] = Field(default_factory=list, description="Step-by-step reasoning trail explaining how conclusion was derived")
     root_cause: Optional[str] = Field(default=None, description="Alias for probable_cause for backward compatibility")
     telemetry_window: List[MetricSnapshot] = Field(default_factory=list, description="Historical metric context")
-
-
-class RiskLevel(str, Enum):
-    """Risk rating for recovery interventions."""
-    LOW = "LOW"
-    MEDIUM = "MEDIUM"
-    HIGH = "HIGH"
-    CRITICAL = "CRITICAL"
-
-
-class AllowedActionType(str, Enum):
-    """Explicit allowlist of permitted recovery actions."""
-    RESTART_DEMO_SERVICE = "restart_demo_service"
-    TERMINATE_DEMO_PROCESS = "terminate_demo_process"
-    LOWER_DEMO_PROCESS_PRIORITY = "lower_demo_process_priority"
-    CLEANUP_DEMO_LOGS = "cleanup_demo_logs"
-    RESTART_DEMO_APPLICATION = "restart_demo_application"
 
 
 class GuardrailStatus(str, Enum):

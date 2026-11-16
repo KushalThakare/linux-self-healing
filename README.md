@@ -89,6 +89,7 @@ pytest
 - [Safety Guardrails](docs/guardrails.md)
 - [Deterministic Diagnosis Engine](docs/diagnosis_engine.md)
 - [Detection Rules Catalog](docs/detection_rules.md)
+- [Isolation Forest Anomaly Detection](docs/anomaly_detection.md)
 - [Monitoring Metrics Catalog](docs/monitoring_metrics.md)
 - [Fault Injection Framework](docs/fault_injection.md)
 - [Safety Rules & Operating Guidelines](AGENTS.md)

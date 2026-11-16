@@ -74,6 +74,8 @@ class DeterministicDiagnosisEngine(BaseDiagnosisEngine):
             result = self._diagnose_disk_exhaustion(diagnosis_id, fault_event, target_id, raw_evidence, history)
         elif fault_type == FaultType.DEADLOCK:
             result = self._diagnose_deadlock(diagnosis_id, fault_event, target_id, raw_evidence, history)
+        elif fault_type == FaultType.STATISTICAL_ANOMALY:
+            result = self._diagnose_statistical_anomaly(diagnosis_id, fault_event, target_id, raw_evidence, history)
         else:
             result = self._diagnose_generic(diagnosis_id, fault_event, target_id, raw_evidence, history)
 
@@ -348,6 +350,70 @@ class DeterministicDiagnosisEngine(BaseDiagnosisEngine):
             severity=FaultSeverity.HIGH,
             confidence=0.95,
             recommended_action=ActionType.GRACEFUL_TERMINATE,
+            traceability_log=traceability,
+            root_cause=probable_cause,
+            telemetry_window=history,
+        )
+
+    # -------------------------------------------------------------------------
+    # 6. Statistical Anomaly Diagnosis (Isolation Forest)
+    # -------------------------------------------------------------------------
+    def _diagnose_statistical_anomaly(
+        self,
+        diagnosis_id: str,
+        event: FaultEvent,
+        target_id: str,
+        evidence: Dict[str, Any],
+        history: List[MetricSnapshot],
+    ) -> DiagnosisResult:
+        score = evidence.get("anomaly_score", event.triggering_value)
+        threshold = evidence.get("threshold", event.threshold_value)
+        top_contributors = evidence.get("top_contributors", [])
+
+        # Default recovery action
+        recommended_action = ActionType.GRACEFUL_TERMINATE
+        top_feature = top_contributors[0]["feature"] if top_contributors else "unknown"
+
+        traceability = [
+            f"Evaluated Isolation Forest anomaly event for target '{target_id}'.",
+            f"Calculated multivariate anomaly score: {score:.3f} (threshold: {threshold:.3f}).",
+        ]
+
+        if top_contributors:
+            contrib_summary = ", ".join(
+                f"{c['feature']} (z={c.get('z_score', 0):.1f}σ)" for c in top_contributors[:3]
+            )
+            traceability.append(f"Forensic feature attribution identified primary deviations: {contrib_summary}.")
+
+            if "cpu" in top_feature:
+                recommended_action = ActionType.GRACEFUL_TERMINATE
+                traceability.append(f"Primary deviation is CPU-bound. Recommending allowlisted action '{recommended_action.value}'.")
+            elif "rss" in top_feature or "memory" in top_feature:
+                recommended_action = ActionType.RESTART_SERVICE
+                traceability.append(f"Primary deviation is memory-bound. Recommending allowlisted action '{recommended_action.value}'.")
+            elif "disk" in top_feature:
+                recommended_action = ActionType.CLEAN_TEMP_DIR
+                traceability.append(f"Primary deviation is disk-bound. Recommending allowlisted action '{recommended_action.value}'.")
+            elif "service" in top_feature:
+                recommended_action = ActionType.RESTART_SERVICE
+                traceability.append(f"Primary deviation is service-state. Recommending allowlisted action '{recommended_action.value}'.")
+
+        confidence = min(max(float(score), 0.70), 0.95)
+        probable_cause = (
+            f"Statistical multivariate anomaly detected on target '{target_id}' with score {score:.3f}. "
+            f"Leading forensic contributor: {top_feature}."
+        )
+
+        return DiagnosisResult(
+            diagnosis_id=diagnosis_id,
+            event_id=event.event_id,
+            fault_type=FaultType.STATISTICAL_ANOMALY,
+            target_id=target_id,
+            evidence=evidence,
+            probable_cause=probable_cause,
+            severity=event.severity,
+            confidence=round(confidence, 2),
+            recommended_action=recommended_action,
             traceability_log=traceability,
             root_cause=probable_cause,
             telemetry_window=history,

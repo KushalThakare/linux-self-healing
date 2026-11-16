@@ -108,6 +108,14 @@ As of Phase 11, the core autonomous user-space closed loop, guardrail safety eng
   - `POST /system/dry-run`: Dynamically toggle dry-run simulation mode.
   - `POST /system/monitoring`: Autonomous loop lifecycle control (`start`, `stop`, `tick`).
 
+### Phase 13: Multivariate Isolation Forest Anomaly Detection Subsystem
+- **Dual Detection Engine ([`src/self_healing/anomaly/`](src/self_healing/anomaly/))**:
+  - Secondary unsupervised ML anomaly detector operating in parallel with deterministic rule-based detectors without replacing them.
+  - 10-dimensional numerical feature pipeline: Host CPU/memory, process CPU, process RSS, thread count, FD count, disk usage %, service state scalar, and dynamic first differences ($\Delta\text{CPU}$, $\Delta\text{RSS}$).
+  - Explainable feature attribution engine calculating standardized $Z$-score deviations against healthy training baselines to produce transparent forensic evidence in `DetectionEvent.evidence`.
+  - Zero direct recovery guarantee: all ML anomaly events strictly traverse the standard closed loop: $\text{Diagnosis} \to \text{Guardrails} \to \text{Recovery} \to \text{Verification} \to \text{Record}$.
+  - Comparative evaluation benchmark suite ([`scripts/evaluate_anomaly_detection.py`](scripts/evaluate_anomaly_detection.py)) demonstrating 0.0% false alarm rate on nominal baseline traffic and sub-threshold early warning capability.
+
 ---
 
 ## 3. What Features Are Left to Build
@@ -115,7 +123,6 @@ As of Phase 11, the core autonomous user-space closed loop, guardrail safety eng
 | Phase | Milestone | Description | Priority |
 |---|---|---|---|
 | **Phase 12** | **Web Dashboard & Visual UI** | Interactive browser frontend to visualize live telemetry, incident lifecycles, and fault controls | **Immediate Next** |
-| **Phase 13** | **Machine Learning Anomaly Detection** | Multivariate Isolation Forest detection baseline for gradual degradation before hard threshold breaches | Secondary |
 | **Phase 14** | **Operator Notification & Webhooks** | Outbound alerting to Slack, Discord, PagerDuty, or webhooks on critical faults and escalations | Enhancement |
 | **Phase 15** | **Multi-Node & Advanced Chaos Testing** | Expanded scenario suite testing cascading multi-fault interactions and worker fleets | Research Final |
 
@@ -211,7 +218,8 @@ Every layer is rigorously covered by unit and integration tests.
 | [`test_api.py`](tests/test_api.py) | FastAPI 13 endpoints, schemas, injection safety | 13 | Passed |
 | [`test_fault_injection.py`](tests/test_fault_injection.py) | 5 sandboxed demo fault injectors | 18 | Passed |
 | [`test_interfaces.py`](tests/test_interfaces.py) | Core subsystem contracts and isolation | 10 | Passed |
-| **Total** | **Full System Test Suite** | **185** | **100% Passed** |
+| [`test_anomaly_detection.py`](tests/test_anomaly_detection.py) | Isolation Forest feature pipeline, scoring, explainability | 11 | Passed |
+| **Total** | **Full System Test Suite** | **196** | **100% Passed** |
 
 ---
 

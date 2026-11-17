@@ -82,13 +82,22 @@ class RuleDetectionEngine(BaseDetectionEngine):
     ) -> List[FaultEvent]:
         events: List[FaultEvent] = []
         for rule in self._rules:
-            event = rule.evaluate(target, window)
-            if event is not None:
-                events.append(event)
-                logger.info(
-                    "Fault detected by rule '%s' for target '%s': %s",
+            try:
+                event = rule.evaluate(target, window)
+                if event is not None:
+                    events.append(event)
+                    logger.info(
+                        "Fault detected by rule '%s' for target '%s': %s",
+                        rule.name,
+                        target.target_id,
+                        event.description,
+                    )
+            except Exception as ex:
+                logger.error(
+                    "Detection rule '%s' raised unexpected exception on target '%s': %s",
                     rule.name,
                     target.target_id,
-                    event.description,
+                    ex,
+                    exc_info=True,
                 )
         return events

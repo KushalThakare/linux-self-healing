@@ -5,7 +5,7 @@ system:
   mode: "development"
   dry_run: true
   log_level: "INFO"
-  workspace_root: "/home/arskage/linux-self-healing"
+  workspace_root: "/home/kushal/projects/linux-self-healing"
 
 monitoring:
   sample_interval_seconds: 1.0

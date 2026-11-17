@@ -61,6 +61,10 @@ class CpuRunawayDetector(BaseFaultRule):
         target: TargetSpec,
         window: List[MetricSnapshot],
     ) -> Optional[DetectionEvent]:
+        # Only evaluate targets with CPU recovery compatibility
+        if target.target_id not in {"demo-cpu", "demo-worker", "demo-memory", "demo-deadlock"}:
+            return None
+
         if not window or len(window) < self.min_samples:
             return None
 

@@ -2,6 +2,7 @@
 
 import http.client
 from pathlib import Path
+import socket
 import subprocess
 import sys
 import time
@@ -53,8 +54,20 @@ class ServiceCrashInjector(BaseFaultInjector):
             start_new_session=True,
         )
 
-        # Wait for service to bind and verify it is alive
-        time.sleep(0.5)
+        # Wait up to 3.0s for service to bind and verify it is alive
+        start_wait = time.time()
+        while time.time() - start_wait < 3.0:
+            if p.poll() is not None:
+                break
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(0.2)
+                s.connect(("127.0.0.1", port))
+                s.close()
+                break
+            except (ConnectionRefusedError, OSError):
+                time.sleep(0.05)
+
         self._save_state(pid=p.pid, target_id=target.target_id, metadata={"port": port, "crashed": False})
 
         if auto_crash:
@@ -67,9 +80,13 @@ class ServiceCrashInjector(BaseFaultInjector):
                 # Expected: connection drops when server exits immediately
                 pass
 
-            time.sleep(0.3)
-            # Re-read state
+            deadline = time.time() + 2.0
             exit_code = p.poll()
+            while time.time() < deadline:
+                exit_code = p.poll()
+                if exit_code is not None:
+                    break
+                time.sleep(0.05)
             logger.info("Service process terminated with exit code: %s", exit_code)
             self._save_state(
                 pid=p.pid,

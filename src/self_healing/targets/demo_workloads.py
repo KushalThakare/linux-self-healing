@@ -152,7 +152,7 @@ def run_service_worker(host: str = "127.0.0.1", port: int = 8085, auto_crash_aft
 # -------------------------------------------------------------------------
 # 4. Disk / Log Growth Workload
 # -------------------------------------------------------------------------
-def run_disk_write(output_dir: str, max_mb: int = 50, chunk_kb: int = 1024, interval_sec: float = 0.2) -> None:
+def run_disk_write(output_dir: str, max_mb: int = 50, chunk_kb: int = 1024, interval_sec: float = 0.05) -> None:
     """Generate dummy log records rapidly into an isolated directory.
     
     Hard safety boundary: strictly capped at max_mb to avoid filling filesystem.
@@ -160,7 +160,7 @@ def run_disk_write(output_dir: str, max_mb: int = 50, chunk_kb: int = 1024, inte
     setup_signal_handlers()
     target_path = Path(output_dir).resolve()
     target_path.mkdir(parents=True, exist_ok=True)
-    log_file = target_path / "demo_disk_growth.log"
+    log_file = str(target_path / "demo_disk_growth.log")
 
     sys.stdout.write(
         f"[DISK_WRITE] Started on PID {os.getpid()}. Writing dummy log entries to {log_file} "
@@ -168,17 +168,16 @@ def run_disk_write(output_dir: str, max_mb: int = 50, chunk_kb: int = 1024, inte
     )
     sys.stdout.flush()
 
-    chunk_data = ("X" * 1022 + "\n") * (chunk_kb // 1)
-    encoded_chunk = chunk_data.encode("utf-8")
+    chunk_data = b"X" * (chunk_kb * 1024)
     total_written_bytes = 0
     max_bytes = max_mb * 1024 * 1024
 
-    with open(log_file, "a", buffering=1024 * 1024) as f:
+    fd = os.open(log_file, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o644)
+    try:
         while _RUNNING:
-            if total_written_bytes + len(encoded_chunk) <= max_bytes:
-                f.write(chunk_data)
-                f.flush()
-                total_written_bytes += len(encoded_chunk)
+            if total_written_bytes + len(chunk_data) <= max_bytes:
+                os.write(fd, chunk_data)
+                total_written_bytes += len(chunk_data)
                 if total_written_bytes % (5 * 1024 * 1024) == 0:
                     written_mb = total_written_bytes / (1024 * 1024)
                     sys.stdout.write(f"[DISK_WRITE] Written {written_mb:.1f} MB / {max_mb} MB limit.\n")
@@ -187,6 +186,11 @@ def run_disk_write(output_dir: str, max_mb: int = 50, chunk_kb: int = 1024, inte
                 # Reached cap: keep file open without expanding further
                 pass
             time.sleep(interval_sec)
+    finally:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 # -------------------------------------------------------------------------
@@ -259,7 +263,8 @@ def main() -> None:
     p_disk = subparsers.add_parser("disk_write", help="Generate log entries rapidly")
     p_disk.add_argument("--dir", default="demo_scratch/logs", help="Output directory")
     p_disk.add_argument("--max-mb", type=int, default=50, help="Maximum disk usage cap in MB")
-    p_disk.add_argument("--interval", type=float, default=0.2, help="Write interval in seconds")
+    p_disk.add_argument("--interval", type=float, default=0.01, help="Write interval in seconds")
+    p_disk.add_argument("--chunk-kb", type=int, default=256, help="Chunk size in KB")
 
     # 5. deadlock_hang
     subparsers.add_parser("deadlock_hang", help="Hang in circular mutex deadlock")
@@ -273,7 +278,7 @@ def main() -> None:
     elif args.workload == "service_worker":
         run_service_worker(host=args.host, port=args.port, auto_crash_after=args.auto_crash_after)
     elif args.workload == "disk_write":
-        run_disk_write(output_dir=args.dir, max_mb=args.max_mb, interval_sec=args.interval)
+        run_disk_write(output_dir=args.dir, max_mb=args.max_mb, chunk_kb=args.chunk_kb, interval_sec=args.interval)
     elif args.workload == "deadlock_hang":
         run_deadlock_hang()
     else:

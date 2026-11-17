@@ -146,16 +146,59 @@
 - [x] Comparative evaluation benchmark script (`scripts/evaluate_anomaly_detection.py`)
 - [x] Architectural documentation (`docs/anomaly_detection.md`)
 
+## Phase 14: Experimental Evaluation & Empirical Benchmarking
+- [x] Automated 10-step lifecycle test harness (`EvaluationHarness`)
+- [x] High-resolution monotonic clock latency metrics (detection, recovery, MTTR)
+- [x] Statistical moments calculation (mean, median, std_dev, min, max, FPR, success rates)
+- [x] Multi-trial evaluation suite across all 5 fault types + nominal baseline (60 live trials)
+- [x] Comparative benchmark: RULE-BASED baseline vs. RULE + ISOLATION FOREST hybrid
+- [x] Raw telemetry CSV export (`evaluation/results/evaluation_trials.csv`)
+- [x] Structured statistical JSON export (`evaluation/results/evaluation_summary.json`)
+- [x] Publication-grade evaluation plots generation (`evaluation/plots/*.png`)
+- [x] SQLite evaluation incidents persistence (`data/evaluation_incidents.db`)
+- [x] Unit test suite (`tests/test_evaluation.py`)
+- [x] Full CLI evaluation runner (`scripts/evaluate_framework.py`)
+- [x] Comprehensive empirical benchmark report (`docs/experimental_evaluation.md`)
+
+## Phase 15: Robustness and Safety Testing
+- [x] Adversarial evaluation across 15 failure vectors:
+  - [x] 1. Repeated CPU faults (flapping limit & cooldown enforcement)
+  - [x] 2. Repeated memory faults (cooldown rate limiting & budget preservation)
+  - [x] 3. Service repeatedly crashing (automated retry ceiling & escalation)
+  - [x] 4. Recovery action failure (handled exception, structured failure result)
+  - [x] 5. Verification failure (unsuccessful recovery caught, status updated)
+  - [x] 6. Invalid recovery target (unregistered target rejection)
+  - [x] 7. Unauthorized process target (PID 1, root daemons, system entities blocked)
+  - [x] 8. Excessive retry requests (preventing infinite retry loops)
+  - [x] 9. Duplicate detection events (in-flight alert storm deduplication)
+  - [x] 10. Malformed detection events (null/corrupt payloads handled safely)
+  - [x] 11. Database failure (SQLite operational failure degrades gracefully)
+  - [x] 12. Monitoring failure (/proc errors and psutil exceptions handled safely)
+  - [x] 13. Detector failure (unhandled detector exception isolated from pipeline)
+  - [x] 14. Permission failure (EPERM / AccessDenied handled cleanly)
+  - [x] 15. Recovery timeout (slow/hung recovery execution bounded and aborted)
+- [x] 6 core safety property invariants verified:
+  - [x] Arbitrary commands cannot execute (`shell=False`, typed allowlist)
+  - [x] Unauthorized targets cannot be healed (PID <= 100, systemd, bash blocked)
+  - [x] Retry loops are prevented (exponential backoff & hard escalation ceiling)
+  - [x] Failures are recorded (persisted in SQLite incident repository)
+  - [x] Verification catches unsuccessful recovery (active probes override candidate flags)
+  - [x] The system fails safely (detector, storage, and telemetry errors isolated)
+- [x] Automated robustness test suite (`tests/test_robustness_safety.py`) - 21/21 passed
+- [x] Standalone robustness & safety CLI runner (`scripts/run_safety_tests.py`)
+- [x] Machine-readable results artifact (`evaluation/results/robustness_safety_results.json`)
+- [x] Comprehensive research report (`docs/robustness_and_safety.md`)
+
 ---
 
 ## Future Roadmap Phases
 
-### Phase 14: Operator Alerting & Webhooks
+### Phase 16: Operator Alerting & Webhooks
 - [ ] Webhook dispatching (Slack, Discord, generic webhook endpoints)
 - [ ] Alert deduplication and throttling
 - [ ] Email / SMS notification integration for critical escalations
 
-### Phase 15: Multi-Node Coordination & Advanced Chaos
+### Phase 17: Multi-Node Coordination & Advanced Chaos
 - [ ] Multi-node agent coordination and cluster heartbeat
 - [ ] Network latency, packet drop, and partition injection
 - [ ] Cascading multi-fault resilience benchmarks

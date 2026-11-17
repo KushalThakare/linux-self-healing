@@ -124,24 +124,25 @@ class AllowedActionRegistry:
         reason = diagnosis.probable_cause
 
         # Map ActionType or AllowedActionType to AllowedActionType
+        is_stat = diagnosis.fault_type.value == "STATISTICAL_ANOMALY"
         if isinstance(recommended, AllowedActionType):
             act_type = recommended
-            req_ev = ["average_cpu_percent"] if diagnosis.fault_type.value == "HIGH_CPU" else ["target_id"]
+            req_ev = ["anomaly_score"] if is_stat else (["average_cpu_percent"] if diagnosis.fault_type.value == "HIGH_CPU" else ["target_id"])
         elif isinstance(recommended, str) and recommended in {a.value for a in AllowedActionType}:
             act_type = AllowedActionType(recommended)
-            req_ev = ["average_cpu_percent"] if diagnosis.fault_type.value == "HIGH_CPU" else ["target_id"]
-        elif recommended == ActionType.GRACEFUL_TERMINATE or recommended == "GRACEFUL_TERMINATE":
+            req_ev = ["anomaly_score"] if is_stat else (["average_cpu_percent"] if diagnosis.fault_type.value == "HIGH_CPU" else ["target_id"])
+        elif recommended in (ActionType.GRACEFUL_TERMINATE, "GRACEFUL_TERMINATE"):
             act_type = AllowedActionType.TERMINATE_DEMO_PROCESS
-            req_ev = ["average_cpu_percent"] if diagnosis.fault_type.value == "HIGH_CPU" else ["thread_counts"]
-        elif recommended == ActionType.RESTART_SERVICE or recommended == "RESTART_SERVICE":
+            req_ev = ["anomaly_score"] if is_stat else (["average_cpu_percent"] if diagnosis.fault_type.value == "HIGH_CPU" else ["thread_counts"])
+        elif recommended in (ActionType.RESTART_SERVICE, "RESTART_SERVICE"):
             act_type = AllowedActionType.RESTART_DEMO_SERVICE
-            req_ev = ["final_rss_mb"] if diagnosis.fault_type.value == "MEMORY_LEAK" else ["recent_evidence"]
-        elif recommended == ActionType.CLEAN_TEMP_DIR or recommended == "CLEAN_TEMP_DIR":
+            req_ev = ["anomaly_score"] if is_stat else (["final_rss_mb"] if diagnosis.fault_type.value == "MEMORY_LEAK" else ["recent_evidence"])
+        elif recommended in (ActionType.CLEAN_TEMP_DIR, "CLEAN_TEMP_DIR"):
             act_type = AllowedActionType.CLEANUP_DEMO_LOGS
-            req_ev = ["log_directory"] if "log_directory" in diagnosis.evidence else ["target_id"]
-        elif recommended == ActionType.RENICE_PROCESS or recommended == "RENICE_PROCESS":
+            req_ev = ["anomaly_score"] if is_stat else (["log_directory"] if "log_directory" in diagnosis.evidence else ["target_id"])
+        elif recommended in (ActionType.RENICE_PROCESS, "RENICE_PROCESS"):
             act_type = AllowedActionType.LOWER_DEMO_PROCESS_PRIORITY
-            req_ev = ["average_cpu_percent"]
+            req_ev = ["anomaly_score"] if is_stat else ["average_cpu_percent"]
         else:
             act_type = AllowedActionType.RESTART_DEMO_APPLICATION
             req_ev = ["target_id"]

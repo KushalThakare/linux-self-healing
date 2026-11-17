@@ -59,6 +59,9 @@ class DeterministicDiagnosisEngine(BaseDiagnosisEngine):
             raw_evidence["triggering_value"] = fault_event.triggering_value
             raw_evidence["threshold_value"] = fault_event.threshold_value
 
+        # Ensure target_id is always present in diagnostic evidence
+        raw_evidence["target_id"] = target_id
+
         # Fuse current system metrics into evidence
         self._fuse_system_metrics(raw_evidence, current_metrics)
 
@@ -379,24 +382,21 @@ class DeterministicDiagnosisEngine(BaseDiagnosisEngine):
             f"Calculated multivariate anomaly score: {score:.3f} (threshold: {threshold:.3f}).",
         ]
 
-        if top_contributors:
-            contrib_summary = ", ".join(
-                f"{c['feature']} (z={c.get('z_score', 0):.1f}σ)" for c in top_contributors[:3]
-            )
-            traceability.append(f"Forensic feature attribution identified primary deviations: {contrib_summary}.")
-
-            if "cpu" in top_feature:
-                recommended_action = ActionType.GRACEFUL_TERMINATE
-                traceability.append(f"Primary deviation is CPU-bound. Recommending allowlisted action '{recommended_action.value}'.")
-            elif "rss" in top_feature or "memory" in top_feature:
-                recommended_action = ActionType.RESTART_SERVICE
-                traceability.append(f"Primary deviation is memory-bound. Recommending allowlisted action '{recommended_action.value}'.")
-            elif "disk" in top_feature:
-                recommended_action = ActionType.CLEAN_TEMP_DIR
-                traceability.append(f"Primary deviation is disk-bound. Recommending allowlisted action '{recommended_action.value}'.")
-            elif "service" in top_feature:
-                recommended_action = ActionType.RESTART_SERVICE
-                traceability.append(f"Primary deviation is service-state. Recommending allowlisted action '{recommended_action.value}'.")
+        # Target-aware allowlisted action recommendation
+        if "cpu" in target_id or "deadlock" in target_id or "memory" in target_id:
+            recommended_action = ActionType.GRACEFUL_TERMINATE
+        elif "disk" in target_id:
+            recommended_action = ActionType.CLEAN_TEMP_DIR
+        elif "service" in target_id or "web" in target_id:
+            recommended_action = ActionType.RESTART_SERVICE
+        elif "cpu" in top_feature:
+            recommended_action = ActionType.GRACEFUL_TERMINATE
+        elif "rss" in top_feature or "memory" in top_feature:
+            recommended_action = ActionType.RESTART_SERVICE
+        elif "disk" in top_feature:
+            recommended_action = ActionType.CLEAN_TEMP_DIR
+        else:
+            recommended_action = ActionType.GRACEFUL_TERMINATE
 
         confidence = min(max(float(score), 0.70), 0.95)
         probable_cause = (

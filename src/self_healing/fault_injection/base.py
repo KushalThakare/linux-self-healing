@@ -28,7 +28,7 @@ from self_healing.targets.registry import (
 
 logger = get_logger("fault_injection")
 
-DEFAULT_STATE_DIR = Path("/home/arskage/linux-self-healing/.fault_state")
+DEFAULT_STATE_DIR = Path(__file__).resolve().parent.parent.parent.parent / ".fault_state"
 
 
 class BaseFaultInjector(ABC):
@@ -118,33 +118,35 @@ class BaseFaultInjector(ABC):
             return None
 
     def stop_tracked_process(self, target: TargetSpec, timeout: float = 3.0) -> bool:
-        """Safely terminate the tracked demo process."""
+        """Safely terminate the tracked demo process and any matching target PIDs."""
+        pids_to_stop: set[int] = set()
         proc = self.get_tracked_process(target)
-        if not proc:
-            state = self._load_state()
-            if state:
-                state["pid"] = None
-                state["stopped"] = True
-                try:
-                    self.state_file.write_text(json.dumps(state, indent=2))
-                except OSError:
-                    pass
-            return True
+        if proc:
+            pids_to_stop.add(proc.pid)
 
-        pid = proc.pid
-        logger.info("Stopping demo process PID %d for target '%s'", pid, target.target_id)
-        try:
-            proc.terminate()
-            proc.wait(timeout=timeout)
-        except psutil.TimeoutExpired:
-            logger.warning("Process PID %d did not terminate gracefully; escalating to SIGKILL", pid)
+        # Also discover any lingering processes matching target specification
+        from self_healing.recovery.handlers.base import find_target_pids
+        for p in find_target_pids(target):
+            pids_to_stop.add(p)
+
+        for pid in pids_to_stop:
+            if not is_safe_pid(pid):
+                continue
+            logger.info("Stopping demo process PID %d for target '%s'", pid, target.target_id)
             try:
-                proc.kill()
-                proc.wait(timeout=2.0)
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                p_obj = psutil.Process(pid)
+                p_obj.terminate()
+                p_obj.wait(timeout=timeout)
+            except (psutil.NoSuchProcess, ProcessLookupError):
                 pass
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
+            except psutil.TimeoutExpired:
+                try:
+                    p_obj.kill()
+                    p_obj.wait(timeout=2.0)
+                except Exception:
+                    pass
+            except Exception as ex:
+                logger.warning("Error stopping process PID %d: %s", pid, ex)
 
         state = self._load_state()
         if state:
@@ -154,8 +156,7 @@ class BaseFaultInjector(ABC):
                 self.state_file.write_text(json.dumps(state, indent=2))
             except OSError:
                 pass
-
-        return not psutil.pid_exists(pid)
+        return True
 
     @abstractmethod
     def start(self, target: TargetSpec, **kwargs: Any) -> FaultStatus:

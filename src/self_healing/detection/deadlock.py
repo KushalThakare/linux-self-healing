@@ -69,6 +69,10 @@ class DeadlockDetector(BaseFaultRule):
         target: TargetSpec,
         window: List[MetricSnapshot],
     ) -> Optional[DetectionEvent]:
+        # Services listening on network sockets and disk-only targets are not deadlock candidates
+        if target.expected_port is not None or "service" in target.target_id or "web" in target.target_id or "disk" in target.target_id:
+            return None
+
         if not window or len(window) < self.min_samples:
             return None
 

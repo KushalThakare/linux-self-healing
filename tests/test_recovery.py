@@ -269,7 +269,10 @@ def test_real_execute_terminate_demo_process(executor: RecoveryExecutor, workspa
         assert res.success is True
         assert res.dry_run is False
         assert pid in res.details["terminated_pids"]
-        proc.poll()
+        try:
+            proc.wait(timeout=2.0)
+        except Exception:
+            pass
         assert not psutil.pid_exists(pid) or proc.returncode is not None, f"PID {pid} should no longer be active"
     finally:
         if psutil.pid_exists(pid):

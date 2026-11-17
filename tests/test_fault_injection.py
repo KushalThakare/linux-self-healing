@@ -17,6 +17,9 @@ from self_healing.fault_injection.memory import MemoryGrowthInjector
 from self_healing.fault_injection.service import ServiceCrashInjector
 
 
+REPO_DIR = str(Path(__file__).resolve().parent.parent)
+
+
 @pytest.fixture
 def temp_state_dir(tmp_path: Path) -> Path:
     """Fixture providing an isolated temporary state directory for tests."""
@@ -31,7 +34,7 @@ def cpu_target() -> TargetSpec:
         target_id="demo-cpu",
         process_name="python3",
         cmdline_substring="demo_workloads cpu_spin",
-        working_dir_prefix="/home/arskage/linux-self-healing",
+        working_dir_prefix=REPO_DIR,
     )
 
 
@@ -41,7 +44,7 @@ def memory_target() -> TargetSpec:
         target_id="demo-memory",
         process_name="python3",
         cmdline_substring="demo_workloads memory_leak",
-        working_dir_prefix="/home/arskage/linux-self-healing",
+        working_dir_prefix=REPO_DIR,
     )
 
 
@@ -52,7 +55,7 @@ def service_target() -> TargetSpec:
         process_name="python3",
         cmdline_substring="demo_workloads service_worker",
         expected_port=8085,
-        working_dir_prefix="/home/arskage/linux-self-healing",
+        working_dir_prefix=REPO_DIR,
     )
 
 
@@ -62,7 +65,7 @@ def disk_target() -> TargetSpec:
         target_id="demo-disk",
         process_name="python3",
         cmdline_substring="demo_workloads disk_write",
-        working_dir_prefix="/home/arskage/linux-self-healing",
+        working_dir_prefix=REPO_DIR,
     )
 
 
@@ -72,7 +75,7 @@ def deadlock_target() -> TargetSpec:
         target_id="demo-deadlock",
         process_name="python3",
         cmdline_substring="demo_workloads deadlock_hang",
-        working_dir_prefix="/home/arskage/linux-self-healing",
+        working_dir_prefix=REPO_DIR,
     )
 
 
@@ -182,13 +185,17 @@ def test_service_crash_injector_lifecycle(temp_state_dir: Path, service_target: 
 def test_disk_growth_injector_lifecycle(temp_state_dir: Path, disk_target: TargetSpec, tmp_path: Path):
     """Test start -> status -> stop -> cleanup for Disk growth injector."""
     injector = DiskGrowthInjector(state_dir=temp_state_dir)
-    test_log_dir = Path("/home/arskage/linux-self-healing/demo_scratch/test_logs")
+    test_log_dir = Path(REPO_DIR) / "demo_scratch" / "test_logs"
 
     start_status = injector.start(disk_target, max_mb=10, output_dir=test_log_dir)
     assert start_status.is_running is True
 
-    time.sleep(0.4)
     curr_status = injector.status(disk_target)
+    for _ in range(25):
+        if curr_status.metrics.get("total_bytes", 0) > 0:
+            break
+        time.sleep(0.1)
+        curr_status = injector.status(disk_target)
     assert curr_status.metrics.get("total_bytes", 0) > 0
 
     stop_status = injector.stop(disk_target)
@@ -207,8 +214,12 @@ def test_deadlock_injector_lifecycle(temp_state_dir: Path, deadlock_target: Targ
     assert start_status.is_running is True
     assert start_status.pid is not None
 
-    time.sleep(0.4)
     curr_status = injector.status(deadlock_target)
+    for _ in range(25):
+        if curr_status.metrics.get("is_hung") is True:
+            break
+        time.sleep(0.1)
+        curr_status = injector.status(deadlock_target)
     assert curr_status.is_running is True
     assert curr_status.metrics.get("is_hung") is True
     assert curr_status.metrics.get("num_threads", 0) >= 3

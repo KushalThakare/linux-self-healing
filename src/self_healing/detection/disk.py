@@ -22,7 +22,7 @@ from self_healing.logging.logger import get_logger
 
 logger = get_logger("detection.disk")
 
-DEFAULT_LOG_DIR = Path("/home/arskage/linux-self-healing/demo_scratch/logs")
+DEFAULT_LOG_DIR = Path(__file__).resolve().parent.parent.parent.parent / "demo_scratch" / "logs"
 
 
 class DiskExhaustionDetector(BaseFaultRule):

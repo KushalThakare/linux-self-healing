@@ -22,9 +22,7 @@ class DeadlockInjector(BaseFaultInjector):
 
     def start(self, target: TargetSpec, **kwargs: Any) -> FaultStatus:
         self.validate_target_safety(target)
-        proc = self.get_tracked_process(target)
-        if proc and proc.is_running():
-            return self.status(target)
+        self.stop_tracked_process(target)
 
         cmd = [sys.executable, "-m", "self_healing.targets.demo_workloads", "deadlock_hang"]
         logger.info("Spawning demo deadlock workload for target '%s': %s", target.target_id, cmd)

@@ -12,12 +12,15 @@ from self_healing.core.exceptions import ConfigurationError
 from self_healing.core.models import TargetSpec
 
 
+DEFAULT_WORKSPACE_ROOT = str(Path(__file__).resolve().parent.parent.parent.parent)
+
+
 class SystemConfig(BaseModel):
     """Core runtime environment configuration."""
     mode: str = Field(default="development", description="Execution mode ('development' or 'production')")
     dry_run: bool = Field(default=True, description="Enforce dry-run mode (log recovery actions without executing)")
     log_level: str = Field(default="INFO", description="Logging verbosity (DEBUG, INFO, WARNING, ERROR)")
-    workspace_root: str = Field(default="/home/arskage/linux-self-healing", description="Root path for project")
+    workspace_root: str = Field(default=DEFAULT_WORKSPACE_ROOT, description="Root path for project")
 
     @field_validator("log_level")
     @classmethod
@@ -76,7 +79,7 @@ def get_default_config() -> AppConfig:
             process_name="python3",
             cmdline_substring="demo_web_service.py",
             expected_port=8080,
-            working_dir_prefix="/home/arskage/linux-self-healing",
+            working_dir_prefix=DEFAULT_WORKSPACE_ROOT,
             max_restarts_per_window=3,
             cooldown_seconds=30.0,
             health_check_url="http://127.0.0.1:8080/health",
@@ -86,7 +89,7 @@ def get_default_config() -> AppConfig:
             process_name="python3",
             cmdline_substring="demo_worker_service.py",
             expected_port=None,
-            working_dir_prefix="/home/arskage/linux-self-healing",
+            working_dir_prefix=DEFAULT_WORKSPACE_ROOT,
             max_restarts_per_window=3,
             cooldown_seconds=30.0,
             health_check_url=None,

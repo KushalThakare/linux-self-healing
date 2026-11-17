@@ -93,7 +93,7 @@ class SelfHealingOrchestrator:
         dry_run: Optional[bool] = None,
         poll_interval_seconds: Optional[float] = None,
         config_path: Optional[str] = None,
-        enable_anomaly_detection: bool = True,
+        enable_anomaly_detection: bool = False,
     ) -> None:
         self.config = config or load_config(config_path)
         self.target_registry = target_registry or TargetRegistry(self.config.targets)
@@ -191,7 +191,7 @@ class SelfHealingOrchestrator:
         self.detection_engine.register_rule(
             AbnormalMemoryDetector(
                 budget_bytes=budget_bytes,
-                min_samples=2,
+                min_samples=3,
             )
         )
         self.detection_engine.register_rule(ServiceFailureDetector())
@@ -321,22 +321,29 @@ class SelfHealingOrchestrator:
             window = self.ring_buffers[tid].get_window()
             events = self.detection_engine.evaluate(target, window)
             for ev in events:
-                if isinstance(ev, DetectionEvent):
-                    detected_events.append((target, ev))
-                else:
-                    # Convert to DetectionEvent
-                    det_ev = DetectionEvent(
-                        event_id=ev.event_id,
-                        target_id=ev.target_id,
-                        fault_type=ev.fault_type,
-                        severity=ev.severity,
-                        detected_at=ev.detected_at,
-                        triggering_value=ev.triggering_value,
-                        threshold_value=ev.threshold_value,
-                        description=ev.description,
-                        evidence={"triggering_value": ev.triggering_value},
-                    )
-                    detected_events.append((target, det_ev))
+                if not ev or not hasattr(ev, "fault_type") or not hasattr(ev, "target_id"):
+                    logger.warning("Ignoring malformed or unidentifiable event for target '%s': %s", tid, ev)
+                    continue
+                try:
+                    if isinstance(ev, DetectionEvent):
+                        detected_events.append((target, ev))
+                    elif isinstance(ev, FaultEvent):
+                        det_ev = DetectionEvent(
+                            event_id=ev.event_id,
+                            target_id=ev.target_id,
+                            fault_type=ev.fault_type,
+                            severity=ev.severity,
+                            detected_at=ev.detected_at,
+                            triggering_value=ev.triggering_value,
+                            threshold_value=ev.threshold_value,
+                            description=ev.description,
+                            evidence={"triggering_value": ev.triggering_value},
+                        )
+                        detected_events.append((target, det_ev))
+                    else:
+                        logger.warning("Ignoring unrecognized event type '%s' on target '%s'", type(ev).__name__, tid)
+                except Exception as ex:
+                    logger.error("Failed to process detection event for target '%s': %s", tid, ex)
 
         # ---------------------------------------------------------------------
         # 3. DEDUPLICATE & DIAGNOSE & REMEDIATE
@@ -388,7 +395,10 @@ class SelfHealingOrchestrator:
 
             # Mark fault as active
             self._active_faults[fault_key] = incident_id
-            self.incident_store.save(incident)
+            try:
+                self.incident_store.save(incident)
+            except Exception as ex:
+                logger.error("Failed to persist incident '%s' during tick: %s", incident_id, ex)
             self._emit_event("incident_created", incident)
 
             # -----------------------------------------------------------------

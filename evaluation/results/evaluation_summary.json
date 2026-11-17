@@ -1,0 +1,284 @@
+{
+  "started_at": "2026-11-17T16:51:38.302930Z",
+  "completed_at": "2026-11-17T16:53:43.605914Z",
+  "trials_per_fault": 5,
+  "rule_based_summary": {
+    "detection_mode": "RULE_BASED",
+    "total_trials": 30,
+    "fault_trials": 25,
+    "nominal_trials": 5,
+    "false_positives": 0,
+    "false_positive_rate_percent": 0.0,
+    "detection_success_rate_percent": 100.0,
+    "recovery_success_rate_percent": 100.0,
+    "verification_success_rate_percent": 100.0,
+    "guardrail_approval_rate_percent": 100.0,
+    "guardrail_rejection_rate_percent": 0.0,
+    "duplicate_suppression_rate_percent": 0.0,
+    "total_collateral_impact": 0,
+    "overall_detection_latency_ms": {
+      "count": 25,
+      "mean": 1019.667,
+      "median": 810.12,
+      "std_dev": 442.959,
+      "min": 575.22,
+      "max": 1894.83
+    },
+    "overall_recovery_latency_ms": {
+      "count": 25,
+      "mean": 258.281,
+      "median": 0.34,
+      "std_dev": 516.648,
+      "min": 0.13,
+      "max": 1300.0
+    },
+    "overall_total_recovery_time_s": {
+      "count": 25,
+      "mean": 1.576,
+      "median": 1.144,
+      "std_dev": 0.708,
+      "min": 0.931,
+      "max": 2.82
+    },
+    "by_fault_detection_latency_ms": {
+      "cpu": {
+        "count": 5,
+        "mean": 693.5,
+        "median": 712.9,
+        "std_dev": 52.033,
+        "min": 601.41,
+        "max": 728.69
+      },
+      "deadlock": {
+        "count": 5,
+        "mean": 808.206,
+        "median": 810.12,
+        "std_dev": 5.437,
+        "min": 799.01,
+        "max": 812.29
+      },
+      "disk": {
+        "count": 5,
+        "mean": 1767.702,
+        "median": 1734.21,
+        "std_dev": 75.536,
+        "min": 1705.7,
+        "max": 1894.83
+      },
+      "memory": {
+        "count": 5,
+        "mean": 598.586,
+        "median": 601.21,
+        "std_dev": 15.885,
+        "min": 575.22,
+        "max": 618.42
+      },
+      "service": {
+        "count": 5,
+        "mean": 1230.342,
+        "median": 1265.62,
+        "std_dev": 56.086,
+        "min": 1168.28,
+        "max": 1275.72
+      }
+    },
+    "by_fault_total_recovery_time_s": {
+      "cpu": {
+        "count": 5,
+        "mean": 1.03,
+        "median": 1.052,
+        "std_dev": 0.052,
+        "min": 0.938,
+        "max": 1.062
+      },
+      "deadlock": {
+        "count": 5,
+        "mean": 1.161,
+        "median": 1.144,
+        "std_dev": 0.027,
+        "min": 1.137,
+        "max": 1.195
+      },
+      "disk": {
+        "count": 5,
+        "mean": 1.973,
+        "median": 1.938,
+        "std_dev": 0.076,
+        "min": 1.91,
+        "max": 2.1
+      },
+      "memory": {
+        "count": 5,
+        "mean": 0.963,
+        "median": 0.969,
+        "std_dev": 0.018,
+        "min": 0.931,
+        "max": 0.978
+      },
+      "service": {
+        "count": 5,
+        "mean": 2.756,
+        "median": 2.798,
+        "std_dev": 0.072,
+        "min": 2.656,
+        "max": 2.82
+      }
+    },
+    "by_fault_recovery_success_rate": {
+      "cpu": 100.0,
+      "deadlock": 100.0,
+      "disk": 100.0,
+      "memory": 100.0,
+      "service": 100.0
+    },
+    "by_fault_verification_success_rate": {
+      "cpu": 100.0,
+      "deadlock": 100.0,
+      "disk": 100.0,
+      "memory": 100.0,
+      "service": 100.0
+    }
+  },
+  "hybrid_summary": {
+    "detection_mode": "RULE_PLUS_ISOLATION_FOREST",
+    "total_trials": 30,
+    "fault_trials": 25,
+    "nominal_trials": 5,
+    "false_positives": 0,
+    "false_positive_rate_percent": 0.0,
+    "detection_success_rate_percent": 100.0,
+    "recovery_success_rate_percent": 100.0,
+    "verification_success_rate_percent": 100.0,
+    "guardrail_approval_rate_percent": 100.0,
+    "guardrail_rejection_rate_percent": 0.0,
+    "duplicate_suppression_rate_percent": 0.0,
+    "total_collateral_impact": 0,
+    "overall_detection_latency_ms": {
+      "count": 25,
+      "mean": 600.31,
+      "median": 460.9,
+      "std_dev": 322.996,
+      "min": 341.12,
+      "max": 1333.43
+    },
+    "overall_recovery_latency_ms": {
+      "count": 25,
+      "mean": 253.551,
+      "median": 0.28,
+      "std_dev": 517.458,
+      "min": 0.09,
+      "max": 1342.46
+    },
+    "overall_total_recovery_time_s": {
+      "count": 25,
+      "mean": 1.644,
+      "median": 0.593,
+      "std_dev": 2.154,
+      "min": 0.367,
+      "max": 5.959
+    },
+    "by_fault_detection_latency_ms": {
+      "cpu": {
+        "count": 5,
+        "mean": 467.884,
+        "median": 460.9,
+        "std_dev": 20.654,
+        "min": 445.98,
+        "max": 493.05
+      },
+      "deadlock": {
+        "count": 5,
+        "mean": 579.99,
+        "median": 579.55,
+        "std_dev": 4.782,
+        "min": 573.15,
+        "max": 584.62
+      },
+      "disk": {
+        "count": 5,
+        "mean": 389.996,
+        "median": 377.49,
+        "std_dev": 22.839,
+        "min": 369.4,
+        "max": 416.85
+      },
+      "memory": {
+        "count": 5,
+        "mean": 353.578,
+        "median": 348.08,
+        "std_dev": 13.967,
+        "min": 341.12,
+        "max": 377.28
+      },
+      "service": {
+        "count": 5,
+        "mean": 1210.1,
+        "median": 1173.46,
+        "std_dev": 78.516,
+        "min": 1132.85,
+        "max": 1333.43
+      }
+    },
+    "by_fault_total_recovery_time_s": {
+      "cpu": {
+        "count": 5,
+        "mean": 0.8,
+        "median": 0.794,
+        "std_dev": 0.026,
+        "min": 0.773,
+        "max": 0.833
+      },
+      "deadlock": {
+        "count": 5,
+        "mean": 0.586,
+        "median": 0.588,
+        "std_dev": 0.006,
+        "min": 0.578,
+        "max": 0.593
+      },
+      "disk": {
+        "count": 5,
+        "mean": 0.598,
+        "median": 0.583,
+        "std_dev": 0.024,
+        "min": 0.576,
+        "max": 0.628
+      },
+      "memory": {
+        "count": 5,
+        "mean": 0.379,
+        "median": 0.374,
+        "std_dev": 0.015,
+        "min": 0.367,
+        "max": 0.406
+      },
+      "service": {
+        "count": 5,
+        "mean": 5.854,
+        "median": 5.891,
+        "std_dev": 0.107,
+        "min": 5.733,
+        "max": 5.959
+      }
+    },
+    "by_fault_recovery_success_rate": {
+      "cpu": 100.0,
+      "deadlock": 100.0,
+      "disk": 100.0,
+      "memory": 100.0,
+      "service": 100.0
+    },
+    "by_fault_verification_success_rate": {
+      "cpu": 100.0,
+      "deadlock": 100.0,
+      "disk": 100.0,
+      "memory": 100.0,
+      "service": 100.0
+    }
+  },
+  "comparison_notes": [
+    "Zero Fabrication: All values were experimentally measured on Ubuntu Linux inside the active VM.",
+    "Evaluated 60 total experimental runs.",
+    "Zero collateral impact across all 60 trials (no host system processes impacted)."
+  ]
+}

@@ -123,7 +123,21 @@ class RestartServiceHandler(BaseActionHandler):
                 start_new_session=True,
             )
             new_pid = proc.pid
-            time.sleep(0.3)
+
+            # Wait up to 2.5s for service to bind to port and verify it is alive
+            import socket
+            bind_start = time.time()
+            while time.time() - bind_start < 2.5:
+                if proc.poll() is not None:
+                    break
+                try:
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.settimeout(0.2)
+                    s.connect(("127.0.0.1", port))
+                    s.close()
+                    break
+                except (ConnectionRefusedError, OSError):
+                    time.sleep(0.05)
 
             # Check if process crashed immediately
             if proc.poll() is not None:

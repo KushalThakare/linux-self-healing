@@ -42,6 +42,14 @@ class RemediationCoordinator:
         self.verification_engine = verification_engine or VerificationEngine(retry_policy=self.retry_policy)
         self.incident_store = incident_store
 
+    def _safe_save_incident(self, incident: IncidentRecord) -> None:
+        """Safely persist incident record, isolating storage errors without crashing coordinator."""
+        if self.incident_store:
+            try:
+                self.incident_store.save(incident)
+            except Exception as ex:
+                logger.error("Failed to persist incident '%s' to store: %s", incident.incident_id, ex)
+
     def execute_and_verify(
         self,
         incident: IncidentRecord,
@@ -81,8 +89,7 @@ class RemediationCoordinator:
             if not decision.allowed:
                 incident.status = IncidentStatus.ESCALATED if current_action.retry_count > 0 else IncidentStatus.POLICY_REJECTED
                 incident.completed_at = utc_now()
-                if self.incident_store:
-                    self.incident_store.save(incident)
+                self._safe_save_incident(incident)
                 logger.warning(
                     "Recovery action '%s' rejected by guardrails for incident '%s' (status: %s): %s",
                     current_action.action_id,
@@ -122,8 +129,7 @@ class RemediationCoordinator:
             if verification_result.verified:
                 incident.status = IncidentStatus.VERIFIED_SUCCESS
                 incident.completed_at = utc_now()
-                if self.incident_store:
-                    self.incident_store.save(incident)
+                self._safe_save_incident(incident)
                 logger.info(
                     "Incident '%s' successfully remediated and verified for target '%s'.",
                     incident.incident_id,
@@ -160,7 +166,6 @@ class RemediationCoordinator:
                 # Retry permitted but auto_retry=False (or manual review required)
                 break
 
-        if self.incident_store:
-            self.incident_store.save(incident)
+        self._safe_save_incident(incident)
 
         return incident

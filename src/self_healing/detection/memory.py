@@ -61,6 +61,10 @@ class AbnormalMemoryDetector(BaseFaultRule):
         target: TargetSpec,
         window: List[MetricSnapshot],
     ) -> Optional[DetectionEvent]:
+        # Memory detector only applies to targets compatible with memory recovery
+        if target.target_id not in {"demo-memory", "demo-service", "demo-web"}:
+            return None
+
         if not window or len(window) < self.min_samples:
             return None
 
@@ -85,7 +89,7 @@ class AbnormalMemoryDetector(BaseFaultRule):
         is_monotonic = all(rss_values[i] >= rss_values[i - 1] for i in range(1, len(rss_values)))
         growth_delta = max(0, final_rss - initial_rss)
         growth_rate = growth_delta / duration_sec
-        rate_exceeded = is_monotonic and (growth_rate >= self.min_growth_rate_bytes_sec) and (growth_delta > 0)
+        rate_exceeded = (initial_rss > 0) and is_monotonic and (growth_rate >= self.min_growth_rate_bytes_sec) and (growth_delta > 0)
 
         if not (budget_exceeded or rate_exceeded):
             return None

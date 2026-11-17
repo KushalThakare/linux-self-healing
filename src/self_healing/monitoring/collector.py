@@ -58,6 +58,7 @@ class ProcessMetricsCollector:
 
     def __init__(self, proc_root: Path = Path("/proc")) -> None:
         self._proc_root = proc_root
+        self._proc_cache: Dict[int, psutil.Process] = {}
 
     def collect_process_metrics(
         self,
@@ -80,7 +81,11 @@ class ProcessMetricsCollector:
             return None
 
         try:
-            proc = psutil.Process(pid)
+            if pid not in self._proc_cache:
+                p = psutil.Process(pid)
+                p.cpu_percent(interval=None)
+                self._proc_cache[pid] = p
+            proc = self._proc_cache[pid]
             name = proc.name()
             ppid = proc.ppid()
             create_time = proc.create_time()
@@ -139,6 +144,7 @@ class ProcessMetricsCollector:
                 target_id=target_id,
             )
         except (psutil.NoSuchProcess, psutil.AccessDenied, ProcessLookupError) as e:
+            self._proc_cache.pop(pid, None)
             logger.debug("Process %s not accessible: %s", pid, e)
             return None
 

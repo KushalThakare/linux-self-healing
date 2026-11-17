@@ -8,6 +8,7 @@ Strict Safety Invariants:
 5. Fully supports DRY-RUN mode.
 """
 
+import concurrent.futures
 from datetime import datetime
 import os
 from pathlib import Path
@@ -57,9 +58,11 @@ class RecoveryExecutor:
         self,
         target_registry: Optional[TargetRegistry] = None,
         dry_run: bool = False,
+        default_timeout_seconds: float = 30.0,
     ) -> None:
         self.target_registry = target_registry or TargetRegistry()
         self.default_dry_run = dry_run
+        self.default_timeout_seconds = default_timeout_seconds
 
         # Allowlisted handler registry
         self._handlers: Dict[AllowedActionType, BaseActionHandler] = {
@@ -203,9 +206,25 @@ class RecoveryExecutor:
         # Step 1: Pre-Execution Validation
         self._validate_action_object(action)
         resolved_target = self._validate_target(action, target_spec)
-        self._validate_permissions(action, resolved_target)
-
         effective_dry_run = self.default_dry_run if dry_run is None else dry_run
+
+        try:
+            self._validate_permissions(action, resolved_target)
+        except ActionExecutionError as pe:
+            err_msg = str(pe)
+            logger.error("[RECOVERY PERMISSION FAILURE] %s", err_msg)
+            return RecoveryResult(
+                action_id=action.action_id,
+                target_id=resolved_target.target_id,
+                action_type=action.action_type,
+                executed_at=utc_now(),
+                success=False,
+                dry_run=effective_dry_run,
+                execution_latency_ms=0.0,
+                output_message=err_msg,
+                error=err_msg,
+                details={"exception_type": "ActionExecutionError"},
+            )
 
         self._record_intent(action, resolved_target, effective_dry_run)
 
@@ -214,9 +233,15 @@ class RecoveryExecutor:
         if not handler:
             raise ActionExecutionError(f"No handler registered for action '{action.action_type.value}'.")
 
+        timeout_seconds = action.parameters.get("timeout_seconds")
+        timeout_val = float(timeout_seconds) if timeout_seconds is not None else self.default_timeout_seconds
+
         start_time = time.perf_counter()
+        pool = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         try:
-            result = handler.execute(action, resolved_target, dry_run=effective_dry_run)
+            future = pool.submit(handler.execute, action, resolved_target, dry_run=effective_dry_run)
+            result = future.result(timeout=timeout_val)
+            pool.shutdown(wait=False)
             logger.info(
                 "[RECOVERY SUCCESS] action_id='%s' target='%s' latency=%.2fms dry_run=%s",
                 result.action_id,
@@ -225,7 +250,25 @@ class RecoveryExecutor:
                 result.dry_run,
             )
             return result
+        except concurrent.futures.TimeoutError:
+            pool.shutdown(wait=False, cancel_futures=True)
+            latency_ms = (time.perf_counter() - start_time) * 1000.0
+            err_msg = f"Recovery execution timed out after {timeout_val:.1f}s for action '{action.action_type.value}'"
+            logger.error("[RECOVERY TIMEOUT] %s", err_msg)
+            return RecoveryResult(
+                action_id=action.action_id,
+                target_id=resolved_target.target_id,
+                action_type=action.action_type,
+                executed_at=utc_now(),
+                success=False,
+                dry_run=effective_dry_run,
+                execution_latency_ms=latency_ms,
+                output_message=err_msg,
+                error=err_msg,
+                details={"exception_type": "TimeoutError", "timeout_seconds": timeout_val},
+            )
         except Exception as ex:
+            pool.shutdown(wait=False)
             latency_ms = (time.perf_counter() - start_time) * 1000.0
             err_msg = f"Recovery execution failed for '{action.action_type.value}': {ex}"
             logger.error("[RECOVERY FAILED] %s", err_msg)

@@ -141,6 +141,10 @@ class IsolationForestDetector(BaseFaultRule):
         current = target_snaps[-1]
         previous = target_snaps[-2] if len(target_snaps) >= 2 else None
 
+        # Non-daemon targets without an active PID are unspawned, not statistical anomalies
+        if target.expected_port is None and current.target_pid is None:
+            return None
+
         explanation = self.score_snapshot(current, previous)
 
         if not explanation.is_anomaly:

@@ -17,7 +17,8 @@ from self_healing.targets.registry import FORBIDDEN_DIRECTORY_PREFIXES
 
 logger = get_logger("fault_injection.disk")
 
-DEFAULT_DEMO_LOG_DIR = Path("/home/arskage/linux-self-healing/demo_scratch/logs")
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DEFAULT_DEMO_LOG_DIR = REPO_ROOT / "demo_scratch" / "logs"
 MAX_SAFE_DISK_MB = 100
 
 
@@ -35,7 +36,7 @@ class DiskGrowthInjector(BaseFaultInjector):
                 f"Security violation: cannot use protected system directory '{resolved}' for disk injection."
             )
         # Must be inside workspace
-        workspace = Path("/home/arskage/linux-self-healing").resolve()
+        workspace = REPO_ROOT.resolve()
         if not output_dir.resolve().is_relative_to(workspace):
             raise SecurityViolationError(
                 f"Security violation: disk growth directory '{resolved}' must be inside workspace '{workspace}'."
@@ -52,9 +53,7 @@ class DiskGrowthInjector(BaseFaultInjector):
         dest_dir = (output_dir or DEFAULT_DEMO_LOG_DIR).resolve()
         self._validate_output_directory(dest_dir)
 
-        proc = self.get_tracked_process(target)
-        if proc and proc.is_running():
-            return self.status(target)
+        self.stop_tracked_process(target)
 
         dest_dir.mkdir(parents=True, exist_ok=True)
         effective_max = min(max_mb, MAX_SAFE_DISK_MB)
@@ -69,7 +68,9 @@ class DiskGrowthInjector(BaseFaultInjector):
             "--max-mb",
             str(effective_max),
             "--interval",
-            "0.1",
+            "0.05",
+            "--chunk-kb",
+            "1024",
         ]
         logger.info(
             "Spawning demo disk growth workload for target '%s' (cap: %dMB): %s",

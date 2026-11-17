@@ -1,7 +1,9 @@
 """FastAPI management and health check application for Linux self-healing."""
 
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
 import psutil
 
 from self_healing import __version__
@@ -105,6 +107,14 @@ def create_app(
         title="Linux Self-Healing Management API",
         version=__version__,
         description="Autonomous Fault Detection and Self-Healing System for Linux - Management & Telemetry API.",
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # Store shared state on app.state
@@ -478,5 +488,13 @@ def create_app(
             return registry.get(target_id)
         except Exception:
             raise HTTPException(status_code=404, detail=f"Target '{target_id}' not found")
+
+    # =========================================================================
+    # Mount Frontend Dashboard Build (if present)
+    # =========================================================================
+    frontend_dist = Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "dist"
+    if frontend_dist.is_dir():
+        from fastapi.staticfiles import StaticFiles
+        app.mount("/dashboard", StaticFiles(directory=str(frontend_dist), html=True), name="dashboard")
 
     return app

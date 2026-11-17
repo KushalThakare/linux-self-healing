@@ -108,6 +108,15 @@ As of Phase 11, the core autonomous user-space closed loop, guardrail safety eng
   - `POST /system/dry-run`: Dynamically toggle dry-run simulation mode.
   - `POST /system/monitoring`: Autonomous loop lifecycle control (`start`, `stop`, `tick`).
 
+### Phase 12: React Monitoring Dashboard & Visual UI
+- **Editorial Research-Grade Interface ([`frontend/`](frontend/))**:
+  - Restrained, non-generic UI built with React 18, TypeScript, and Tailwind CSS.
+  - Soft off-white surfaces (`#F9F9F8`), neutral charcoal typography (`#1C1C1A`), and single intentional technical cobalt accent (`#1D4ED8`). Zero purple gradients, glowing orbs, emojis, or bubbly cards.
+  - Complete 14 functional sections: System health, CPU utilization (with 80% threshold line), Memory, Filesystem storage, Supervised processes, Supervised services, Active incidents alert banner, Incident audit history, Detection evidence, Guardrail decision matrix (8 safety checks), Recovery actions, Verification results, Controlled fault injection suite, and Dry-run indicator.
+  - **Visible Autonomous Closed-Loop Pipeline Stepper**:
+    $$\text{DETECTED} \longrightarrow \text{DIAGNOSED} \longrightarrow \text{GUARDRAIL} \longrightarrow \text{RECOVERED} \longrightarrow \text{VERIFIED}$$
+    Distinguishing states: `SUCCESS` (green), `FAILED` (crimson), `REJECTED` (amber), and `IN PROGRESS` (slate blue).
+
 ### Phase 13: Multivariate Isolation Forest Anomaly Detection Subsystem
 - **Dual Detection Engine ([`src/self_healing/anomaly/`](src/self_healing/anomaly/))**:
   - Secondary unsupervised ML anomaly detector operating in parallel with deterministic rule-based detectors without replacing them.
@@ -122,7 +131,6 @@ As of Phase 11, the core autonomous user-space closed loop, guardrail safety eng
 
 | Phase | Milestone | Description | Priority |
 |---|---|---|---|
-| **Phase 12** | **Web Dashboard & Visual UI** | Interactive browser frontend to visualize live telemetry, incident lifecycles, and fault controls | **Immediate Next** |
 | **Phase 14** | **Operator Notification & Webhooks** | Outbound alerting to Slack, Discord, PagerDuty, or webhooks on critical faults and escalations | Enhancement |
 | **Phase 15** | **Multi-Node & Advanced Chaos Testing** | Expanded scenario suite testing cascading multi-fault interactions and worker fleets | Research Final |
 

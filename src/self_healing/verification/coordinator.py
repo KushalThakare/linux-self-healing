@@ -4,12 +4,14 @@ from typing import Any, Dict, Optional
 import time
 
 from self_healing.core.models import (
+    GuardrailStatus,
     IncidentRecord,
     IncidentStatus,
     RecoveryAction,
     RecoveryResult,
     TargetSpec,
     VerificationResult,
+    VerificationStatus,
     utc_now,
 )
 from self_healing.guardrails.engine import SafetyGuardrailEngine
@@ -98,7 +100,6 @@ class RemediationCoordinator:
                     decision.violations,
                 )
                 return incident
-
 
             incident.status = IncidentStatus.POLICY_APPROVED
             self.guardrail_engine.record_action(resolved_target.target_id)

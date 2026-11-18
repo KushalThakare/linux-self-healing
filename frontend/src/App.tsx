@@ -49,10 +49,14 @@ export const App: React.FC = () => {
       if (m) setMetrics(m);
       if (procs) setProcesses(procs);
       if (svcs) setServices(svcs);
-      if (incs) {
+      if (incs && incs.length > 0) {
         setIncidents(incs);
-        // Default select latest incident if none selected
-        if (!selectedIncident && incs.length > 0) {
+        // Automatically track and update the latest incident or currently selected one
+        const currentId = selectedIncident?.incident_id;
+        const matching = currentId ? incs.find(i => i.incident_id === currentId) : null;
+        if (matching) {
+          setSelectedIncident(matching);
+        } else {
           setSelectedIncident(incs[0]);
         }
       }
@@ -64,10 +68,10 @@ export const App: React.FC = () => {
     }
   }, [selectedIncident]);
 
-  // Initial fetch and 2-second interval polling
+  // Initial fetch and 1-second interval polling for real-time responsiveness
   useEffect(() => {
     refreshData();
-    const interval = setInterval(refreshData, 2000);
+    const interval = setInterval(refreshData, 1000);
     return () => clearInterval(interval);
   }, [refreshData]);
 
@@ -110,6 +114,7 @@ export const App: React.FC = () => {
   };
 
   const handleStartFault = async (faultType: string, intensity: number = 85.0) => {
+    setSelectedIncident(null);
     await api.startFault(faultType, intensity);
     await refreshData();
   };

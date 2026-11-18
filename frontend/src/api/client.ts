@@ -449,6 +449,10 @@ export const api = {
   },
   getIncident: (id: string) => fetchJson<IncidentRecord>(`/incidents/${id}`, undefined, FALLBACK_INCIDENTS[0]),
   getGuardrails: () => fetchJson<GuardrailsSummary>('/guardrails'),
+  resetGuardrails: () => 
+    fetchJson<{ status: string; message: string }>('/guardrails/reset', {
+      method: 'POST',
+    }, { status: 'ok', message: 'Guardrail cooldowns reset' }),
 
   setDryRun: (dryRun: boolean) => 
     fetchJson<{ dry_run: boolean; message: string }>('/system/dry-run', {

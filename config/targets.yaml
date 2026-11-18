@@ -7,8 +7,8 @@ targets:
     cmdline_substring: "demo_web_service.py"
     expected_port: 8080
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: "http://127.0.0.1:8080/health"
     enabled: true
 
@@ -17,8 +17,8 @@ targets:
     cmdline_substring: "demo_worker_service.py"
     expected_port: null
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: null
     enabled: true
 
@@ -27,8 +27,8 @@ targets:
     cmdline_substring: "demo_workloads cpu_spin"
     expected_port: null
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: null
     enabled: true
 
@@ -37,8 +37,8 @@ targets:
     cmdline_substring: "demo_workloads memory_leak"
     expected_port: null
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: null
     enabled: true
 
@@ -47,8 +47,8 @@ targets:
     cmdline_substring: "demo_workloads service_worker"
     expected_port: 8085
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: "http://127.0.0.1:8085/health"
     enabled: true
 
@@ -57,8 +57,8 @@ targets:
     cmdline_substring: "demo_workloads disk_write"
     expected_port: null
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: null
     enabled: true
 
@@ -67,7 +67,7 @@ targets:
     cmdline_substring: "demo_workloads deadlock_hang"
     expected_port: null
     working_dir_prefix: "/home/kushal/projects/linux-self-healing"
-    max_restarts_per_window: 3
-    cooldown_seconds: 30.0
+    max_restarts_per_window: 10
+    cooldown_seconds: 5.0
     health_check_url: null
     enabled: true

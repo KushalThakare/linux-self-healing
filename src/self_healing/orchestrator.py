@@ -459,6 +459,7 @@ class SelfHealingOrchestrator:
                     remediated_incident.incident_id,
                 )
             elif remediated_incident.status == IncidentStatus.ESCALATED:
+                self._active_faults.pop(fault_key, None)
                 self.stats.incidents_escalated += 1
                 self._emit_event("incident_escalated", remediated_incident)
                 logger.warning(
@@ -468,6 +469,7 @@ class SelfHealingOrchestrator:
                     remediated_incident.incident_id,
                 )
             elif remediated_incident.status == IncidentStatus.POLICY_REJECTED:
+                self._active_faults.pop(fault_key, None)
                 logger.warning(
                     "Remediation action rejected by guardrails for incident '%s': %s",
                     remediated_incident.incident_id,

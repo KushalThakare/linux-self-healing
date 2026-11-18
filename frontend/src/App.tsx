@@ -100,6 +100,15 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleResetGuardrails = async () => {
+    try {
+      await api.resetGuardrails();
+      await refreshData();
+    } catch (err: any) {
+      console.error('Error resetting guardrails:', err);
+    }
+  };
+
   const handleStartFault = async (faultType: string, intensity: number = 85.0) => {
     await api.startFault(faultType, intensity);
     await refreshData();
@@ -117,6 +126,7 @@ export const App: React.FC = () => {
         status={systemStatus}
         dryRun={dryRun}
         onToggleDryRun={handleToggleDryRun}
+        onResetGuardrails={handleResetGuardrails}
         onTick={handleTick}
         onToggleLoop={handleToggleLoop}
         onRefresh={refreshData}

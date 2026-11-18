@@ -277,6 +277,16 @@ def create_app(
             recent_actions_count=sum(len(v) for v in engine._action_history.values()),
         )
 
+    @app.post("/guardrails/reset")
+    def reset_guardrails() -> Dict[str, Any]:
+        """Reset guardrail action history and active cooldown timers."""
+        orch.guardrail_engine._action_history.clear()
+        orch.reset_active_faults()
+        return {
+            "status": "ok",
+            "message": "Guardrail cooldowns and active faults reset successfully",
+        }
+
     # =========================================================================
     # 9. Recovery Action History
     # =========================================================================

@@ -6,6 +6,7 @@ interface HeaderProps {
   status: SystemStatusResponse | null;
   dryRun: boolean;
   onToggleDryRun: (newDryRun: boolean) => void;
+  onResetGuardrails?: () => void;
   onTick: () => void;
   onToggleLoop: (start: boolean) => void;
   onRefresh: () => void;
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   status,
   dryRun,
   onToggleDryRun,
+  onResetGuardrails,
   onTick,
   onToggleLoop,
   onRefresh,
@@ -63,6 +65,15 @@ export const Header: React.FC<HeaderProps> = ({
             >
               Toggle
             </button>
+            {onResetGuardrails && (
+              <button
+                onClick={onResetGuardrails}
+                className="text-xs px-2 py-1 rounded border border-border bg-surface hover:bg-canvas text-charcoal transition-colors font-medium"
+                title="Clear all active cooldown timers and flapping locks"
+              >
+                Reset Cooldowns
+              </button>
+            )}
           </div>
 
           {/* Autonomous Loop Control */}

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-17T17:20:30.509583+00:00",
+  "generated_at": "2026-11-18T02:53:55.514614+00:00",
   "total_tests": 21,
   "passed_tests": 21,
   "pass_rate_percent": 100.0,
@@ -15,7 +15,7 @@
       "invariant": "Flapping lockout & cooldown rate limiter prevent thrashing",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1643.29,
+      "latency_ms": 1800.18,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -26,7 +26,7 @@
       "invariant": "Guardrails block repeated actions during active cooldown",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1605.95,
+      "latency_ms": 2023.76,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -37,7 +37,7 @@
       "invariant": "Automated retry limit halts loop and marks incident ESCALATED",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1742.95,
+      "latency_ms": 1733.24,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.09s ==============================="
     },
     {
@@ -48,7 +48,7 @@
       "invariant": "Handler exception produces RecoveryResult(success=False) without crash",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1663.94,
+      "latency_ms": 1613.51,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -59,8 +59,8 @@
       "invariant": "Verification failure updates RecoveryResult and flags incident",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1662.92,
-      "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
+      "latency_ms": 1449.45,
+      "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.01s ==============================="
     },
     {
       "id": "VECTOR-06",
@@ -70,7 +70,7 @@
       "invariant": "TargetRegistry & Guardrails reject unauthorized target IDs",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1699.27,
+      "latency_ms": 1677.5,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -81,7 +81,7 @@
       "invariant": "PID boundary & identity safety raise SecurityViolationError",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1686.03,
+      "latency_ms": 1647.75,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -92,7 +92,7 @@
       "invariant": "Hard ceiling on retries enforces incident escalation",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1699.19,
+      "latency_ms": 1541.16,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -103,7 +103,7 @@
       "invariant": "Active fault tracker deduplicates alert storms",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1700.61,
+      "latency_ms": 1616.81,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -114,7 +114,7 @@
       "invariant": "Defensive input parsing isolates malformed payloads",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1798.9,
+      "latency_ms": 1620.52,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -125,8 +125,8 @@
       "invariant": "Storage exceptions isolated; orchestrator continues loop",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1864.77,
-      "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.06s ==============================="
+      "latency_ms": 1668.55,
+      "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.05s ==============================="
     },
     {
       "id": "VECTOR-12",
@@ -136,8 +136,8 @@
       "invariant": "Collector falls back to boot time / safe system baselines",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1812.93,
-      "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.04s ==============================="
+      "latency_ms": 1675.83,
+      "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.05s ==============================="
     },
     {
       "id": "VECTOR-13",
@@ -147,7 +147,7 @@
       "invariant": "Faulty detection rule isolated; healthy rules continue",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1838.93,
+      "latency_ms": 1658.55,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -158,7 +158,7 @@
       "invariant": "Permission denial caught and structured failure recorded",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1730.39,
+      "latency_ms": 2036.4,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -169,7 +169,7 @@
       "invariant": "Execution bounded by timeout; aborts hung tasks cleanly",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 2533.75,
+      "latency_ms": 2546.36,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.22s ==============================="
     }
   ],
@@ -182,7 +182,7 @@
       "invariant": "Zero arbitrary shell execution; typed allowlist mandatory",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 2031.39,
+      "latency_ms": 1954.25,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -193,7 +193,7 @@
       "invariant": "Restricted strictly to registered, enabled demo targets",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1725.19,
+      "latency_ms": 1848.25,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -204,7 +204,7 @@
       "invariant": "Deterministic escalation terminates retry cycles",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1735.23,
+      "latency_ms": 1867.4,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -215,7 +215,7 @@
       "invariant": "Incident store records immutable failure history",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1657.37,
+      "latency_ms": 1992.3,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -226,7 +226,7 @@
       "invariant": "Verification outcome overrides candidate success flag",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1758.6,
+      "latency_ms": 1783.8,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.02s ==============================="
     },
     {
@@ -237,7 +237,7 @@
       "invariant": "End-to-end exception containment guarantees uptime",
       "status": "PASSED",
       "passed": true,
-      "latency_ms": 1797.5,
+      "latency_ms": 1941.81,
       "details": "============================= test session starts ==============================\nplatform linux -- Python 3.14.4, pytest-9.2.0, pluggy-1.7.0\nrootdir: /home/kushal/projects/linux-self-healing\nconfigfile: pyproject.toml\nplugins: anyio-4.16.0\ncollected 1 item\n\ntests/test_robustness_safety.py .                                        [100%]\n\n============================== 1 passed in 0.12s ==============================="
     }
   ]

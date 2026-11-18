@@ -79,6 +79,7 @@ pytest
 
 ## Documentation & Roadmap
 
+- [Step-by-Step Execution Guide & Runbook](HOW_TO_RUN.md)
 - [Features, Status & Visualization Roadmap](FEATURES_AND_ROADMAP.md)
 - [System Architecture](docs/architecture.md)
 - [FastAPI Backend & API Endpoints](docs/api_backend.md)
